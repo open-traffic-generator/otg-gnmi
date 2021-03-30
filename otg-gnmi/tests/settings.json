@@ -1,0 +1,13 @@
+{
+    "username": "test",
+    "password": "test",
+    "api_server": "https://localhost:443",
+    "ports": [
+        "localhost;1;1",
+        "localhost;1;2"
+    ],
+    "flows": [
+        "F1",
+        "F2"
+    ]    
+}
