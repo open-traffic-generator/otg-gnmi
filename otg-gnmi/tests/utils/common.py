@@ -12,21 +12,13 @@ if sys.version_info[0] >= 3:
     unicode = str
 
 
-# path to settings.json relative root dir
-SETTINGS_FILE = 'settings.json'
-# path to dir containing traffic configurations relative root dir
-CONFIGS_DIR = 'configs'
+# path to gnmi_settings.json and gnmi_test_settings.json relative root dir
+GNMI_SETTINGS_FILE = 'gnmi_settings.json'
+GNMI_TEST_SETTINGS_FILE = 'gnmi_test_settings.json'
 
 
 def get_root_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def get_test_config_path(config_name):
-    return os.path.join(
-        os.path.dirname(get_root_dir()), CONFIGS_DIR, config_name
-    )
-
 
 def dict_items(d):
     try:
@@ -60,8 +52,61 @@ def load_dict_from_json_file(path):
     with open(path, 'r') as fp:
         return json.load(fp, object_hook=byteify)
 
+class BaseSettings(object):
+    def __init__(self, settings_file):
+        self.setings_file = settings_file
+    
+    def load_from_settings_file(self):
+        self.__dict__ = load_dict_from_json_file(self.get_settings_path())
+        
+    def get_settings_path(self):
+        return os.path.join(get_root_dir(), self.setings_file)
 
-class Settings(object):
+
+class GnmiSettings(object):
+    """
+    Singleton for global settings
+    """
+    def __init__(self):
+        # these not be defined and are here only for documentation
+        self.user = None
+        self.password = None
+        self.credentials = None
+        self.rootcertificate = None
+        self.privatekey = None
+        self.certificatechain = None
+        self.authentication = None
+        self.issecure = None
+        self.load_from_settings_file()
+
+    def load_from_settings_file(self):
+        self.__dict__ = load_dict_from_json_file(self.get_settings_path())
+        # overwrite with custom settings if it exists
+        custom = os.environ.get('SETTINGS_FILE', None)
+        if custom is not None and os.path.exists(custom):
+            self.__dict__ = load_dict_from_json_file(custom)
+
+    def get_settings_path(self):
+        return os.path.join(get_root_dir(), GNMI_SETTINGS_FILE)
+
+    def register_pytest_command_line_options(self, parser):
+        for key, val in object_dict_items(self):
+            parser.addoption("--%s" % key, action="store", default=None)
+
+    def load_from_pytest_command_line(self, config):
+        for key, val in object_dict_items(self):
+            new_val = config.getoption(key)
+            if new_val is not None:
+                if key in ['license_servers', 'ports']:
+                    # items in a list are expected to be passed in as a string
+                    # where each item is separated by whitespace
+                    setattr(self, key, new_val.split())
+                else:
+                    setattr(self, key, new_val)
+
+
+
+class GnmiTestSettings(object):
     """
     Singleton for global settings
     """
@@ -98,6 +143,7 @@ class Settings(object):
                     setattr(self, key, new_val.split())
                 else:
                     setattr(self, key, new_val)
+
 
 
 # shared global settings
