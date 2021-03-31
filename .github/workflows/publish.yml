@@ -1,27 +1,47 @@
-# Build workflow does the following:
-#   - checkout all files
-#   - get the latest version number
-#   - setup python 3.x env
-#   - install python dependencies
-#   - build python distributions
-#   - create a tag and release
-#   - upload assets to the release
-#   - upload assets to pypi
+name: CI to Docker Hub 
 
-name: Build
-
-on: [push, pull_request, workflow_dispatch, repository_dispatch]
+on:
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
-  build_and_test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Test Step
-      run: uname -a
-
-
-    
+      - 
+        name: Checkout
+        uses: actions/checkout@v2
+      -       
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      -     
+        name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      
+      - 
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./ 
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: otg-gnmi-server:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
