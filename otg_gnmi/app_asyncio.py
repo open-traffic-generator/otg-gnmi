@@ -8,6 +8,7 @@ import argparse
 
 from .autogen import gnmi_pb2_grpc
 from .common.ixnutils import *
+from .common.utils import *
 from .gnmi_serv_asyncio import AsyncGnmiService
 
 
@@ -15,7 +16,10 @@ class AsyncServer:
 
     @staticmethod
     async def run(args) -> None:              
-        #https://github.com/grpc/grpc/issues/23070          
+        #https://github.com/grpc/grpc/issues/23070  
+        args.logfile = init_logging(args.logfile)
+        server_logger = logging.getLogger(args.logfile) 
+
         grpc_async.init_grpc_aio()
         server = grpc.aio.server()
         gnmi_pb2_grpc.add_gNMIServicer_to_server(AsyncGnmiService(args), server)
@@ -25,7 +29,7 @@ class AsyncServer:
         if (args.app_mode == 'ixnetwork'):
             app_name = 'IxNetwork'        
         server.add_insecure_port(server_address)
-        logging.info("Starting gNMI server on %s [App: %s, Target: %s:%s]", server_address, app_name, args.target_host, args.target_port)
+        server_logger.info("Starting gNMI server on %s [App: %s, Target: %s:%s]", server_address, app_name, args.target_host, args.target_port)
         
         await server.start()
         
@@ -35,7 +39,7 @@ class AsyncServer:
             # Shuts down the server with 0 seconds of grace period. During the
             # grace period, the server won't accept new connections and allow
             # existing RPCs to continue within the grace period.
-            logging.info('Stopping async server')
+            server_logger.info('Stopping async server')
             TestManager.Instance().terminate()
             all_rpcs_done_event = await server.stop(5)
             all_rpcs_done_event.wait(30)

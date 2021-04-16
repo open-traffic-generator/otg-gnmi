@@ -4,14 +4,21 @@ import time
 import logging
 from .autogen import gnmi_pb2_grpc, gnmi_pb2
 from .common.ixnutils import *
-from .common import gnmiutils
+from .common import utils
 
-
+class ServerOptions(object):
+  def __init__(self, args):
+    self.app_mode = args.app_mode
+    self.unittest = args.unittest
+    self.logfile = args.logfile
+    self.target_address = "{}:{}".format(args.target_host, args.target_port)
+    
 class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
 
   def __init__(self, args):
       super().__init__()
-      self.app_mode = args.app_mode
+      self.options = ServerOptions(args)
+      self.logger = logging.getLogger(self.options.logfile)
       self.target_address = "{}:{}".format(args.target_host, args.target_port)
     
   async def Capabilities(self, request, context):
@@ -48,19 +55,19 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
     '''
-    logging.info("Received set request. Metadata: %s", context.invocation_metadata())
-    logging.info("Received set request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
+    self.logger.info("Received set request. Metadata: %s", context.invocation_metadata())
+    self.logger.info("Received set request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
     
     try:
-      init, error = await TestManager.Instance().init_once_func(self.app_mode, self.target_address)
+      init, error = await TestManager.Instance().init_once_func(self.options)
       if init == False:
         context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
         context.set_details(error)
         raise Exception(error)
     except Exception as ex:
       #await TestManager.Instance().terminate(request_iterator)
-      logging.error('Exception: %s', str(ex))
-      logging.error('Exception: ', exc_info=True)
+      self.logger.error('Exception: %s', str(ex))
+      self.logger.error('Exception: ', exc_info=True)
 
     return request
 
@@ -73,11 +80,11 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     """
 
       
-    logging.info("Received subscription request. Metadata: %s", context.invocation_metadata())
-    logging.info("Received subscription request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
+    self.logger.info("Received subscription request. Metadata: %s", context.invocation_metadata())
+    self.logger.info("Received subscription request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
     
     try:
-      init, error = await TestManager.Instance().init_once_func(self.app_mode, self.target_address)
+      init, error = await TestManager.Instance().init_once_func(self.options)
       if init == False:
         context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
         context.set_details(error)
@@ -92,13 +99,13 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
         responses = await TestManager.Instance().publish_stats()
         for response in responses:
           if response != None:
-            logging.info('Response: %s', response)
+            self.logger.info('Response: %s', response)
             yield response
         await asyncio.sleep(2)
 
     except Exception as ex:
       #await TestManager.Instance().terminate(request_iterator)
-      logging.error('Exception: %s', str(ex))
-      logging.error('Exception: ', exc_info=True)
+      self.logger.error('Exception: %s', str(ex))
+      self.logger.error('Exception: ', exc_info=True)
       
 

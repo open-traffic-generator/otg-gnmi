@@ -19,7 +19,7 @@ COPY . /home/otg-gnmi/
 
 RUN python3 -m pip install --upgrade -r requirements.txt
 
-ENTRYPOINT [ "python3", "-m", "otg-gnmi" ]
+ENTRYPOINT [ "python3", "-m", "otg_gnmi" ]
 
 # default server port
 EXPOSE 50051

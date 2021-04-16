@@ -14,7 +14,7 @@ import snappi
 
 from ..autogen import gnmi_pb2_grpc, gnmi_pb2
 from ..autogen import otg_pb2
-from .gnmiutils import *
+from .utils import *
 
 class TimeIt(object):
     def __call__(self, f):
@@ -36,8 +36,7 @@ class TimeIt(object):
 g_RequestId = -1
 def get_request_id():
     global g_RequestId
-    g_RequestId += 1
-    logging.info("Unique Subscription Id is %s", g_RequestId)
+    g_RequestId += 1    
 
 
 class SubscriptionReq:
@@ -247,11 +246,13 @@ class TestManager:
             TestManager()
         return TestManager.m_instance   
 
-    async def init_once_func(self, app_mode, target_address):
+    async def init_once_func(self, options):
         try:
             if self.init_once == False:
-                self.app_mode = app_mode
-                self.target_address = target_address
+                self.app_mode = options.app_mode
+                self.unittest = options.unittest
+                self.target_address = options.target_address
+                self.logger = logging.getLogger(options.logfile)
 
                 self.api = None
                 self.stopped = False
@@ -263,8 +264,10 @@ class TestManager:
                 self.lock = Lock()
                 self.get_api()
                 self.start_worker_threads()
-                self.setup_test()
-                self.start_test()
+                
+                if self.unittest == False:
+                    self.setup_test()
+                    self.start_test()
                 self.init_once = True
                 return self.init_once, None
         except Exception as ex:
@@ -272,7 +275,7 @@ class TestManager:
         return self.init_once, None
 
     def start_worker_threads(self):
-        logging.info('Starting all collection threads')
+        self.logger.info('Starting all collection threads')
         self.flow_stats_thread = Thread(target=self.collect_flow_stats, args=[])
         self.flow_stats_thread.start()        
         self.port_stats_thread = Thread(target=self.collect_port_stats, args=[])
@@ -282,14 +285,14 @@ class TestManager:
         
         
     def stop_worker_threads(self):
-        logging.info('Stopping all collection threads')
+        self.logger.info('Stopping all collection threads')
         self.stopped = True
         self.flow_stats_thread.join()
         self.port_stats_thread.join()
         self.protocol_stats_thread.join()        
 
     async def terminate(self, request_iterator):
-        logging.info('Terminate connection')
+        self.logger.info('Terminate connection')
         self.stop_worker_threads()
         await self.deregister_subscription(request_iterator)
         self.dump_all_subscription()
@@ -310,10 +313,10 @@ class TestManager:
                 sub.error = None
                 names.append(sub.name)
                 name_to_sub_reverse_map[sub.name] = sub
-            logging.info('Collect %s stats for %s', meta, names)
+            self.logger.info('Collect %s stats for %s', meta, names)
             try:
                 metrics = func(names)            
-                logging.info('Collected %s stats for %s', meta, metrics)
+                self.logger.info('Collected %s stats for %s', meta, metrics)
                 for metric in metrics:
                     if metric.name not in name_to_sub_reverse_map:
                         continue
@@ -327,14 +330,14 @@ class TestManager:
                     sub.error = str(ex)
             
         except Exception:
-            logging.error("Fatal error in collecting stats for %s: names:%s", meta, names)
-            logging.error("Fatal error: ", exc_info=True)
+            self.logger.error("Fatal error in collecting stats for %s: names:%s", meta, names)
+            self.logger.error("Fatal error: ", exc_info=True)
             
             
 
     
     def collect_flow_stats(self):
-        logging.info('Started flow stats collection thread')
+        self.logger.info('Started flow stats collection thread')
         while self.stopped == False:
             if len(self.flow_subscriptions) > 0:
                 self.collect_stats(self.flow_subscriptions,\
@@ -343,7 +346,7 @@ class TestManager:
         
 
     def collect_port_stats(self):
-        logging.info('Started port stats collection thread')
+        self.logger.info('Started port stats collection thread')
         while self.stopped == False:
             if len(self.port_subscriptions) > 0:
                 self.collect_stats(self.port_subscriptions,\
@@ -353,7 +356,7 @@ class TestManager:
 
     def collect_protocol_stats(self):
         time.sleep(6)
-        logging.info('Started protocol stats collection thread')
+        self.logger.info('Started protocol stats collection thread')
         while self.stopped == False:
             if len(self.protocol_subscriptions) > 0:
                 self.collect_stats(self.protocol_subscriptions,\
@@ -363,15 +366,19 @@ class TestManager:
     def get_api(self):
         if self.init_once:
             return self.api
-        target = "https://{}".format(self.target_address)
-        logging.info('Initializing snappi for %s at target %s', self.app_mode, target)
+        target = None
+        if self.unittest:
+            target = "http://{}".format('127.0.0.1:80')
+        else:
+            target = "https://{}".format(self.target_address)
+        self.logger.info('Initializing snappi for %s at target %s', self.app_mode, target)
         # when using ixnetwork extension, host is IxNetwork API Server
         
         if self.app_mode == 'ixnetwork':
             self.api = snappi.api(host=target, ext='ixnetwork')
         else:
-            self.api = snappi.api(host=target, ext='')
-        logging.info('Initialized snappi...')
+            self.api = snappi.api(host=target)
+        self.logger.info('Initialized snappi...')
         return self.api
   
     def setup_test(self):
@@ -379,16 +386,16 @@ class TestManager:
         #self.setup_dut_test()
 
     def setup_dut_test(self):
-        logging.info('Setting up test...')
+        self.logger.info('Setting up test...')
         jsonRequest = """
         {
             "ports": [
                 {
-                "location": "10.72.47.17;1;1",
+                "location": "10.36.74.135;1;1",
                 "name": "P1"
                 },
                 {
-                "location": "10.72.47.17;1;2",
+                "location": "10.36.74.135;1;2",
                 "name": "P2"
                 }
             ],
@@ -620,19 +627,19 @@ class TestManager:
         """
 
         response = self.api.set_config(jsonRequest)        
-        logging.info('Setup test done...')
+        self.logger.info('Setup test done...')
 
     def setup_b2b_test(self):
-        logging.info('Setting up test...')
+        self.logger.info('Setting up test...')
         jsonRequest = """
         {
             "ports": [
                 {
-                "location": "10.72.47.17;1;1",
+                "location": "10.36.74.135;1;1",
                 "name": "P1"
                 },
                 {
-                "location": "10.72.47.17;1;2",
+                "location": "10.36.74.135;1;2",
                 "name": "P2"
                 }
             ],
@@ -880,7 +887,7 @@ class TestManager:
         """
 
         response = self.api.set_config(jsonRequest)        
-        logging.info('Setup test done...')
+        self.logger.info('Setup test done...')
 
     def start_test(self):
         jsonRequest = """
@@ -947,34 +954,40 @@ class TestManager:
 
     def dump_all_subscription(self):
         
-        logging.info('Port Subscriptions: total subscription = %s', len(self.port_subscriptions))
+        self.logger.info('Port Subscriptions: total subscription = %s', len(self.port_subscriptions))
         for path in self.port_subscriptions:
             sub = self.port_subscriptions[path]
-            logging.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
+            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-        logging.info('Flow Subscriptions: total subscription = %s', len(self.flow_subscriptions))
+        self.logger.info('Flow Subscriptions: total subscription = %s', len(self.flow_subscriptions))
         for path in self.flow_subscriptions:
             sub = self.flow_subscriptions[path]
-            logging.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
+            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-        logging.info('Protocol Subscriptions: total subscription = %s', len(self.protocol_subscriptions))
+        self.logger.info('Protocol Subscriptions: total subscription = %s', len(self.protocol_subscriptions))
         for path in self.protocol_subscriptions:
             sub = self.protocol_subscriptions[path]
-            logging.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
+            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
                 
     async def register_subscription(self, request_iterator):
-        async for request in request_iterator.__aiter__():  
-            for subscription in request.subscribe.subscription:
-                sub = SubscriptionReq(request.subscribe, subscription)
-                sub.encoding = request.subscribe.encoding
-                if sub.type == RequestType.PORT:
-                    self.port_subscriptions[sub.stringpath] = sub
-                elif sub.type == RequestType.FLOW:
-                    self.flow_subscriptions[sub.stringpath] = sub
-                elif sub.type == RequestType.PROTOCOL:
-                    self.protocol_subscriptions[sub.stringpath] = sub
-                else:
-                    logging.info('Unknown Subscription %s', sub.stringpath)
+        try:
+            async for request in request_iterator.__aiter__():  
+                if request == None:
+                    continue
+                for subscription in request.subscribe.subscription:
+                    sub = SubscriptionReq(request.subscribe, subscription)
+                    sub.encoding = request.subscribe.encoding
+                    if sub.type == RequestType.PORT:
+                        self.port_subscriptions[sub.stringpath] = sub
+                    elif sub.type == RequestType.FLOW:
+                        self.flow_subscriptions[sub.stringpath] = sub
+                    elif sub.type == RequestType.PROTOCOL:
+                        self.protocol_subscriptions[sub.stringpath] = sub
+                    else:
+                        self.logger.info('Unknown Subscription %s', sub.stringpath)
+        except Exception as ex:
+            self.logger.error('Exception: %s', str(ex))
+            self.logger.error('Exception: ', exc_info=True)   
 
         self.dump_all_subscription()
 
@@ -995,7 +1008,7 @@ class TestManager:
         results = []
 
         def publish(key, subscriptions, res, meta=None):
-            #logging.info('Publish %s Stats %s', meta, key)
+            #self.logger.info('Publish %s Stats %s', meta, key)
             sub = subscriptions[key]
             
             if sub.error != None:
