@@ -635,11 +635,11 @@ class TestManager:
         {
             "ports": [
                 {
-                "location": "10.36.74.135;1;1",
+                "location": "10.72.47.17;1;1",
                 "name": "P1"
                 },
                 {
-                "location": "10.36.74.135;1;2",
+                "location": "10.72.47.17;1;2",
                 "name": "P2"
                 }
             ],

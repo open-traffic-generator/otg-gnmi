@@ -126,7 +126,7 @@ class Session(object):
 					self.logger.error('Unknown response received:\n'+str(response))
 
 		except KeyboardInterrupt:
-			self.logger.info("%s stopped by user", prog)
+			self.logger.info("Stopped by user")
 
 		except grpc.RpcError as x:
 			self.logger.error("grpc.RpcError received:\n%s", x.details)
