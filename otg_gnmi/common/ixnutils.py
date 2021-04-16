@@ -265,9 +265,11 @@ class TestManager:
                 self.get_api()
                 self.start_worker_threads()
                 
+                '''
                 if self.unittest == False:
                     self.setup_test()
                     self.start_test()
+                '''
                 self.init_once = True
                 return self.init_once, None
         except Exception as ex:
