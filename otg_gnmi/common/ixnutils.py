@@ -999,6 +999,7 @@ class TestManager:
                     sub = SubscriptionReq(request.subscribe, session, subscription)
                     sub.client.register_path(sub.stringpath)
                     sub.encoding = request.subscribe.encoding
+                    #self.logger.info('Register Subscription %s', sub.stringpath)
                     if sub.type == RequestType.PORT:
                         self.port_subscriptions[sub.stringpath] = sub
                     elif sub.type == RequestType.FLOW:
@@ -1018,6 +1019,7 @@ class TestManager:
             for subscription in request.subscribe.subscription:                
                 sub = SubscriptionReq(subscribe, session, subscription)
                 sub.client.register_path(sub.stringpath)
+                #self.logger.info('Deregister Subscription %s', sub.stringpath)
                 if sub.type == RequestType.PORT:
                     self.port_subscriptions.pop(sub.stringpath)
                 elif sub.type == RequestType.FLOW:

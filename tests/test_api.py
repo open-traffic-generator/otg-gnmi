@@ -2,13 +2,17 @@ import pytest
 from tests.conftest import *
 
 def test_capabilites(gnmi_server, snappiserver, session):
-    resp = session.capabilites()
+    result = session.capabilites()
+    assert(result == False)
 
 def test_get(gnmi_server, snappiserver, session):
-    resp = session.get()
+    result = session.get()
+    assert(result == False)
 
 def test_set(gnmi_server, snappiserver, session):
-    session.set()
+    result = session.set()
+    assert(result == False)
 
 def test_subscribe(gnmi_server, snappiserver, session):
-    session.subscribe()
+    result = session.subscribe()
+    assert(result == True)

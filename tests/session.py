@@ -71,36 +71,98 @@ class Session(object):
 		return stub	
 
 	def capabilites(self):
-		self.logger.info('Sending capabilites request \n')
-		pass
+		
+		result = True
+		self.logger.info('Sending CapabilityRequest')
+		try:
+			request = gnmi_pb2.CapabilityRequest()
+			responses = self.stub.Capabilities(request, metadata=self.options.metadata)
+			self.logger.info('CapabilityRequest Response: %s', responses)
+			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
+				result = False
+    	
+		except KeyboardInterrupt:
+			self.logger	.info("Stopped by user")
+			result = False
+
+		except grpc.RpcError as x:
+			self.logger.error("RPC Error: %s", x.details)
+			result = False
+
+		except Exception as err:
+			self.logger.error("Excepion: s", err)
+			result = False
+
+		return result
 
 	def get(self):
-		self.logger.info('Sending get request \n')
-		pass
+		
+		result = True
+		self.logger.info('Sending GetRequest')
+		try:
+			request = gnmi_pb2.GetRequest()
+			responses = self.stub.Get(request, metadata=self.options.metadata)
+			self.logger.info('GetRequest Response: %s', responses)
+			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
+				result = False
+    	
+		except KeyboardInterrupt:
+			self.logger	.info("Stopped by user")
+			result = False
+
+		except grpc.RpcError as x:
+			self.logger.error("RPC Error: %s", x.details)
+			result = False
+
+		except Exception as err:
+			self.logger.error("Excepion: s", err)
+			result = False
+
+		return result
+
 
 	def set(self):
-		self.logger.info('Sending set request \n')
-		path = gnmi_pb2.Path(elem=[                
-			gnmi_pb2.PathElem(name='val', key={'name': 'setup_test'})
-		])
-		update = gnmi_pb2.Update(path=path, val=gnmi_pb2.TypedValue(json_val=json.dumps({'name': 'setup_test'}).encode("utf-8")))
-		updates = []
-		updates.append(update)
-		gnmi_message_request = gnmi_pb2.SetRequest(update=updates)
-		gnmi_message_response = self.stub.Set(gnmi_message_request, metadata=self.options.metadata)
-		self.logger.info('Response: %s', gnmi_message_response)
+		
+		result = True
+		self.logger.info('Sending SetRequest')
+		try:
+			path = gnmi_pb2.Path(elem=[                
+				gnmi_pb2.PathElem(name='val', key={'name': 'setup_test'})
+			])
+			update = gnmi_pb2.Update(path=path, val=gnmi_pb2.TypedValue(json_val=json.dumps({'name': 'setup_test'}).encode("utf-8")))
+			updates = []
+			updates.append(update)
+			request = gnmi_pb2.SetRequest(update=updates)			
+			responses = self.stub.Get(request, metadata=self.options.metadata)
+			self.logger.info('SetRequest Response: %s', responses)
+			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
+				result = False
+    	
+		except KeyboardInterrupt:
+			self.logger	.info("Stopped by user")
+			result = False
+
+		except grpc.RpcError as x:
+			self.logger.error("RPC Error: %s", x.details)
+			result = False
+
+		except Exception as err:
+			self.logger.error("Excepion: s", err)
+			result = False
+
+		return result
 
 	def subscribe(self):
-		self.logger.debug('Sending subscription request for %s\n', self.options.to_string())		
-		req_iterator = generate_subscription_request(self.options)
 		
-		msgs = 0
-		upds = 0
-		secs = 0
+		result = True
+		req_iterator = generate_subscription_request(self.options)		
+		
 		start = 0
-
+		secs = 0
+		upd_cnt = 0
+		resp_cnt = 0
 		try:
-			self.logger.info ('Sending Request: %s', req_iterator) 
+			self.logger.info ('Sending SubscribeRequest: %s', req_iterator) 
 			#responses = self.stub.Subscribe(req_iterator, self.options.timeout, metadata=self.options.metadata)
 			responses = self.stub.Subscribe(req_iterator, None, metadata=self.options.metadata)
 			res_idx = 0 
@@ -119,32 +181,35 @@ class Session(object):
 					start = 0
 					if self.options.stats:
 						self.logger.info("Total Messages: %d [Rate: %5.0f], Total Updates: %d [Rate: %5.0f], Total Time: %1.2f secs", 
-							msgs, msgs/secs, upds, upds/secs, secs)						
+							resp_cnt, resp_cnt/secs, upd_cnt, upd_cnt/secs, secs)						
 				
 				elif response.HasField('update'):
 					if start==0:
 						start=time.time()
-					msgs += 1
-					upds += len(response.update.update)
+					resp_cnt += 1
+					upd_cnt += len(response.update.update)
 					if not self.options.stats:
 						self.logger.info('Update received\n'+str(response))
 				else:
 					self.logger.error('Received unknown response: %s', str(response))
 
-				if self.options.is_done(upds):
+				if self.options.is_done(upd_cnt):
 					self.logger.info('Completed, exiting now.\n')
 					break
 
 		except KeyboardInterrupt:
-			self.logger.info("Stopped by user")
+			self.logger	.info("Stopped by user")
+			result = False
 
 		except grpc.RpcError as x:
 			self.logger.error("RPC Error: %s", x.details)
-			print(x.details)
+			result = False
 
 		except Exception as err:
 			self.logger.error("Excepion: s", err)
+			result = False
 
+		return result
 
 if __name__ == '__main__':
 	sessoin = Session()

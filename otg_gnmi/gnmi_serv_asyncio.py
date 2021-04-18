@@ -51,10 +51,11 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     to set the value to.
     Reference: gNMI Specification Section 3.4
     """
-    '''
+    
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
+    
     '''
     self.logger.info("Received set request. Metadata: %s", context.invocation_metadata())
     self.logger.info("Received set request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
@@ -71,6 +72,7 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
       self.logger.error('Exception: ', exc_info=True)
 
     return request
+    '''
 
   async def Subscribe(self, request_iterator, context):
     """Subscribe allows a client to request the target to send it values
@@ -84,32 +86,34 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     self.logger.info("Received subscription request. Metadata: %s", context.invocation_metadata())
     self.logger.info("Received subscription request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
     
-    try:
-      init, error = await TestManager.Instance().init_once_func(self.options)
-      if init == False:
-        context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
-        context.set_details(error)
-        raise Exception(error)
-      
-      session = await TestManager.Instance().create_new_session(context)
-      # https://github.com/grpc/grpc/issues/23070
-      #context.add_done_callback(TestManager.Instance().terminate(request_iterator))
-      await TestManager.Instance().register_subscription(session, request_iterator)
+    init, error = await TestManager.Instance().init_once_func(self.options)
+    if init == False:
+      context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
+      context.set_details(error)
+      raise Exception(error)
+    
+    session = await TestManager.Instance().create_new_session(context)
+    # https://github.com/grpc/grpc/issues/23070
+    #context.add_done_callback(TestManager.Instance().terminate(request_iterator))
+    await TestManager.Instance().register_subscription(session, request_iterator)
 
-      while await TestManager.Instance().keep_polling():
-            
+    error = False
+    while await TestManager.Instance().keep_polling():
+          
+      try:
         responses = await TestManager.Instance().publish_stats(session)
         for response in responses:
           if response != None:
             self.logger.info('Response: %s', response)
             yield response
-        await asyncio.sleep(2)
+      except Exception as innerEx:
+        self.logger.error('Exception: %s', str(innerEx))
+        self.logger.error('Exception: ', exc_info=True)
+        error = True
+      if error:
+        break
+      await asyncio.sleep(2)
 
-    except Exception as ex:
-      #await TestManager.Instance().terminate(request_iterator)
-      self.logger.error('Exception: %s', str(ex))
-      self.logger.error('Exception: ', exc_info=True)
-    
     await TestManager.Instance().deregister_subscription(session, request_iterator)
       
 
