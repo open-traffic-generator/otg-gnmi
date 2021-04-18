@@ -5,25 +5,6 @@ import time
 import logging
 from datetime import datetime
 
-def get_current_time():
-    current_utc = datetime.utcnow()
-    current_utc = str(current_utc).split('.')[0]
-    current_utc = current_utc.replace(' ','-')
-    current_utc = current_utc.replace(':','-')
-    return current_utc
-
-def init_logging(name):
-    logs_dir = os.path.join(os.path.curdir, 'logs')
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
-    logfile = name+'-'+str(get_current_time())+'.log'
-    logfile = os.path.join(logs_dir, logfile)  
-    logging.basicConfig(
-        filename=logfile, 
-        level=logging.INFO,
-        format='%(asctime)s %(message)s', 
-        datefmt='%m/%d/%Y %I:%M:%S %p')
-
 if sys.version_info[0] >= 3:
     # alias str as unicode for python3 and above
     unicode = str
@@ -121,9 +102,19 @@ class GnmiSettings(BaseSettings):
         self.submode = None
         self.mode = None
         self.paths = None
+        self.prefix = None
+        self.qos = None
+        self.use_alias = None
+        self.stats = None
+        self.waitForResponses = None
         self.load_from_settings_file()
         self.authentication = [self.username, self.password]
         self.metadata = [('username',self.username), ('password', self.password)]
+        
+    def is_done(self, curr_upds):
+        if self.waitForResponses != 0 and self.waitForResponses <= curr_upds:
+            return True
+        return False
 
 class GnmiTestSettings(BaseSettings):
     """
@@ -141,6 +132,7 @@ if __name__ == '__main__':
     # shared global settings
     gnmiSettings = GnmiSettings()
     print(gnmiSettings.__dict__)
+    
 
     gnmiTestSettings = GnmiTestSettings()
     print(gnmiTestSettings.__dict__)

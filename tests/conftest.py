@@ -35,6 +35,8 @@ def gnmi_server():
             "python",
             "-m",
             "otg_gnmi",
+            "--server-port",
+            "50055",
             "--unittest",
             "True",
             "--app-mode",
@@ -71,4 +73,6 @@ def snappiserver():
 @pytest.fixture(scope="session")
 def session():    
     from tests.session import Session
-    return Session()
+    session = Session()
+    session.options.waitForResponses = 10
+    return session

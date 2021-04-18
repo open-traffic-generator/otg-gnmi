@@ -56,7 +56,7 @@ def init_logging(logger_name, level=logging.INFO):
     streamHandler.setFormatter(formatter)
     l.setLevel(level)
     l.addHandler(fileHandler)
-    l.addHandler(streamHandler)  
+    #l.addHandler(streamHandler)  
     return logger_name 
 
 def is_none_or_empty(data):

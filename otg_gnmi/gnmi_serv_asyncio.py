@@ -4,7 +4,8 @@ import time
 import logging
 from .autogen import gnmi_pb2_grpc, gnmi_pb2
 from .common.ixnutils import *
-from .common import utils
+from .common.utils import *
+from .common.client_session import *
 
 class ServerOptions(object):
   def __init__(self, args):
@@ -90,13 +91,14 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
         context.set_details(error)
         raise Exception(error)
       
+      session = await TestManager.Instance().create_new_session(context)
       # https://github.com/grpc/grpc/issues/23070
       #context.add_done_callback(TestManager.Instance().terminate(request_iterator))
-      await TestManager.Instance().register_subscription(request_iterator)
+      await TestManager.Instance().register_subscription(session, request_iterator)
 
       while await TestManager.Instance().keep_polling():
             
-        responses = await TestManager.Instance().publish_stats()
+        responses = await TestManager.Instance().publish_stats(session)
         for response in responses:
           if response != None:
             self.logger.info('Response: %s', response)
@@ -107,5 +109,7 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
       #await TestManager.Instance().terminate(request_iterator)
       self.logger.error('Exception: %s', str(ex))
       self.logger.error('Exception: ', exc_info=True)
+    
+    await TestManager.Instance().deregister_subscription(session, request_iterator)
       
 

@@ -15,6 +15,7 @@ import snappi
 from ..autogen import gnmi_pb2_grpc, gnmi_pb2
 from ..autogen import otg_pb2
 from .utils import *
+from .client_session import *
 
 class TimeIt(object):
     def __call__(self, f):
@@ -40,8 +41,9 @@ def get_request_id():
 
 
 class SubscriptionReq:
-    def __init__(self, subscriptionList, subscription):
+    def __init__(self, subscriptionList, session, subscription):
         # Assign subscriptionList properties
+        self.client = session
         self.parent_encoding = subscriptionList.encoding
         self.parent_mode = subscriptionList.mode
         
@@ -60,8 +62,7 @@ class SubscriptionReq:
         self.delta_stats = None
         self.encoded_stats = None
         self.availabel_cols = []
-        self.subscribed_cols = []
-        self.client = []
+        self.subscribed_cols = []        
         self.error = None
         
 
@@ -257,9 +258,11 @@ class TestManager:
                 self.api = None
                 self.stopped = False
 
+                self.client_sessions = {}
                 self.port_subscriptions = {}
                 self.flow_subscriptions = {}
                 self.protocol_subscriptions = {}
+
                 
                 self.lock = Lock()
                 self.get_api()
@@ -299,6 +302,17 @@ class TestManager:
         await self.deregister_subscription(request_iterator)
         self.dump_all_subscription()
 
+    async def create_new_session(self, context):
+        self.lock.acquire()        
+        session = None
+        if context in self.client_sessions:
+            session = self.client_sessions[context]
+        else:
+            session = ClientSession(context)
+            self.client_sessions[context] = session
+        self.lock.release()
+        return session
+
     def collect_stats(self, subscriptions, func, meta):
         self.lock.acquire()        
         self._collect_stats(subscriptions, func, meta)
@@ -315,10 +329,10 @@ class TestManager:
                 sub.error = None
                 names.append(sub.name)
                 name_to_sub_reverse_map[sub.name] = sub
-            self.logger.info('Collect %s stats for %s', meta, names)
+            #self.logger.info('Collect %s stats for %s', meta, names)
             try:
                 metrics = func(names)            
-                self.logger.info('Collected %s stats for %s', meta, metrics)
+                #self.logger.info('Collected %s stats for %s', meta, metrics)
                 for metric in metrics:
                     if metric.name not in name_to_sub_reverse_map:
                         continue
@@ -327,6 +341,7 @@ class TestManager:
                     sub.curr_stats = metric
                     sub.compute_delta()
                     sub.encode_stats(metric.name)
+                    
             except Exception as ex:
                 for key in subscriptions:
                     sub.error = str(ex)
@@ -370,7 +385,7 @@ class TestManager:
             return self.api
         target = None
         if self.unittest:
-            target = "http://{}".format('127.0.0.1:80')
+            target = "http://{}".format('127.0.0.1:11009')
         else:
             target = "https://{}".format(self.target_address)
         self.logger.info('Initializing snappi for %s at target %s', self.app_mode, target)
@@ -947,7 +962,11 @@ class TestManager:
         notification = gnmi_pb2.Notification(timestamp=milliseconds, update=[update])
         sub_res = gnmi_pb2.SubscribeResponse(update=notification)
         return sub_res
-
+    
+    def encode_sync(self): 
+        sync_resp = gnmi_pb2.SubscribeResponse(sync_response=True)
+        return sync_resp
+    
     def create_error_response(self, stats_name, error_message):
         #err = gnmi_pb2.Error(data=stats_name, message=error_message)
         err = gnmi_pb2.Error(message=stats_name + ': ' + error_message)
@@ -971,13 +990,14 @@ class TestManager:
             sub = self.protocol_subscriptions[path]
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
                 
-    async def register_subscription(self, request_iterator):
+    async def register_subscription(self, session, request_iterator):
         try:
             async for request in request_iterator.__aiter__():  
                 if request == None:
                     continue
                 for subscription in request.subscribe.subscription:
-                    sub = SubscriptionReq(request.subscribe, subscription)
+                    sub = SubscriptionReq(request.subscribe, session, subscription)
+                    sub.client.register_path(sub.stringpath)
                     sub.encoding = request.subscribe.encoding
                     if sub.type == RequestType.PORT:
                         self.port_subscriptions[sub.stringpath] = sub
@@ -993,10 +1013,11 @@ class TestManager:
 
         self.dump_all_subscription()
 
-    async def deregister_subscription(self, subscriptions):
+    async def deregister_subscription(self, session, subscriptions):
         async for request in request_iterator.__aiter__():  
             for subscription in request.subscribe.subscription:                
-                sub = SubscriptionReq(subscribe, subscription)
+                sub = SubscriptionReq(subscribe, session, subscription)
+                sub.client.register_path(sub.stringpath)
                 if sub.type == RequestType.PORT:
                     self.port_subscriptions.pop(sub.stringpath)
                 elif sub.type == RequestType.FLOW:
@@ -1006,10 +1027,10 @@ class TestManager:
         self.dump_all_subscription()
         self.stop_worker_threads()
     
-    async def publish_stats(self):
+    async def publish_stats(self, session):
         results = []
 
-        def publish(key, subscriptions, res, meta=None):
+        def publish(key, subscriptions, session, res, meta=None):
             #self.logger.info('Publish %s Stats %s', meta, key)
             sub = subscriptions[key]
             
@@ -1019,16 +1040,20 @@ class TestManager:
             
             if sub.encoded_stats != None:
                 res.append(sub.encoded_stats)
+                sub.client.update_stats(key)
 
         for key in self.port_subscriptions:
-            publish(key, self.port_subscriptions, results, 'Port')
+            publish(key, self.port_subscriptions, session, results, 'Port')
 
         for key in self.flow_subscriptions:
-            publish(key, self.flow_subscriptions, results, 'Flow')
+            publish(key, self.flow_subscriptions, session, results, 'Flow')
 
         for key in self.protocol_subscriptions:
-            publish(key, self.protocol_subscriptions, results, 'Protocol')
-        
+            publish(key, self.protocol_subscriptions, session, results, 'Protocol')
+
+        if session.send_sync():
+            results.append(self.encode_sync())
+
         return results
         
     async def keep_polling(self):

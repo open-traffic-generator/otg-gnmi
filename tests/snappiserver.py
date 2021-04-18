@@ -89,7 +89,7 @@ def after_request(resp):
 
 
 def web_server():
-    app.run(port=80, debug=True, use_reloader=False)
+    app.run(port=11009, debug=True, use_reloader=False)
 
 
 class SnappiServer(object):
@@ -107,7 +107,7 @@ class SnappiServer(object):
 
     def _wait_until_ready(self):
         flask_logger.info('Init snappi api object ')
-        api = snappi.api(host='http://127.0.0.1:80')
+        api = snappi.api(host='http://127.0.0.1:11009')
         flask_logger.info('Done Init snappi api object ')
         while True:
             try:
