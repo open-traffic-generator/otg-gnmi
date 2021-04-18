@@ -52,7 +52,7 @@ jobs:
 
       - name: Run sanity unit tests
         run: |
-          sudo ${{ env.pythonLocation }}/python -m pytest -v
+          sudo ${{ env.pythonLocation }}/python3 -m pytest -v
           
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

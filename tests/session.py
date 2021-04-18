@@ -110,7 +110,7 @@ class Session(object):
 				res_idx = res_idx + 1
 				
 				if response.HasField('error'):
-    				self.logger.error('gNMI Error Code %s, Error Message: %s', 
+					self.logger.error('gNMI Error Code %s, Error Message: %s', 
 						str(response.error.code), str(response.error.message))
 
 				elif response.HasField('sync_response'):
