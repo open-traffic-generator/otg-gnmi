@@ -1,6 +1,6 @@
 .vscode
 logs
-test
+
 
 .pytest_cache/
 __pycache__/
@@ -12,4 +12,4 @@ __pycache__/
 
 server.crt
 server.key
-tests/pytest.xml
+tests/results.xml
