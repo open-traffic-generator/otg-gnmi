@@ -25,6 +25,9 @@ ENTRYPOINT [ "python3", "-m", "otg_gnmi" ]
 EXPOSE 50051
 
 # sudo docker build -t otg-gnmi-server:latest .
-# sudo docker run -p 50051:50051 --rm --name otg-gnmi-server-instance otg-gnmi-server:latest --server-port 50051 --app-mode ixnetwork --target-host 10.72.46.133 --target-port 443
+# sudo docker run -p 50051:50051 --rm --name otg-gnmi-server-instance otg-gnmi-server:latest \
+#		--server-port 50051 --app-mode ixnetwork \
+#  		--target-host 10.72.46.133 --target-port 443 \
+#		--server-key server.key --server-crt server.crt
 # sudo docker exec -it otg-gnmi-server-instance sh
 

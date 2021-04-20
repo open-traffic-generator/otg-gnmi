@@ -32,7 +32,7 @@ class Session(object):
 		return options
 
 	def is_secure(self):
-		if len(self.options.tls) == 0 and len(self.options.cert) == 0:
+		if self.options.secure == True and len(self.options.cert) == 0:
 			return False
 		return True
 
@@ -40,25 +40,17 @@ class Session(object):
 		self.logger.info("Create gNMI channel")
 		channel = None
 		self.logger.info('Options: %s', self.options.to_string())
-		if self.is_secure():
+		if self.options.secure:
 			self.logger.info("Create SSL Channel [connection: %s]", self.options.server)
-			if self.options.cert:
-				cred = grpc.ssl_channel_credentials(root_certificates=open(self.options.cert).read())
+			if self.options.servercrt:
+				certificate = None
+				# https://github.com/grpc/grpc/issues/6722
 				opts = []
-				if self.options.altName:
-					opts.append(('grpc.ssl_target_name_override', self.options.altName,))
-				if self.options.noHostCheck:
-					self.logger.error('Disable server name verification against TLS cert is not yet supported!')
-					# TODO: Clarify how to setup gRPC with SSLContext using check_hostname:=False
-
+				opts.append(('grpc.ssl_target_name_override', self.options.ssl_target_name_override,))				
+				with open(self.options.servercrt, 'rb') as f:
+					certificate = f.read()
+				cred = grpc.ssl_channel_credentials(root_certificates=certificate)
 				channel = grpc.secure_channel(self.options.server, cred, opts)
-			else:
-				self.logger.error('Disable cert validation against root certificate (InsecureSkipVerify) is not yet supported!')
-				# TODO: Clarify how to setup gRPC with SSLContext using verify_mode:=CERT_NONE
-
-				cred = grpc.ssl_channel_credentials(root_certificates=None, private_key=None, certificate_chain=None)
-				channel = grpc.secure_channel(self.options.server, cred)
-
 		else:
 			self.logger.info("Create insecure Channel")
 			channel = grpc.insecure_channel(self.options.server)

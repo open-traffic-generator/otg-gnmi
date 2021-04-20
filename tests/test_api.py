@@ -14,5 +14,6 @@ def test_set(gnmi_server, snappiserver, session):
     assert(result == False)
 
 def test_subscribe(gnmi_server, snappiserver, session):
+    session.waitForResponses = 2
     result = session.subscribe()
     assert(result == True)

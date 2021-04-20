@@ -36,11 +36,11 @@ def gnmi_server():
             "-m",
             "otg_gnmi",
             "--server-port",
-            "50055",
-            "--unittest",
-            "True",
+            "50051",
             "--app-mode",
-            "athena"
+            "athena",
+            "--unittest",
+            "--insecure"
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -74,5 +74,5 @@ def snappiserver():
 def session():    
     from tests.session import Session
     session = Session()
-    session.options.waitForResponses = 10
+    session.options.waitForResponses = 3
     return session

@@ -8,3 +8,8 @@ __pycache__/
 
 
 *.log
+.rnd
+
+server.crt
+server.key
+tests/pytest.xml
