@@ -76,3 +76,4 @@ def session():
     session = Session()
     session.options.waitForResponses = 3
     return session
+

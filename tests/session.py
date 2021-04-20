@@ -70,8 +70,8 @@ class Session(object):
 			request = gnmi_pb2.CapabilityRequest()
 			responses = self.stub.Capabilities(request, metadata=self.options.metadata)
 			self.logger.info('CapabilityRequest Response: %s', responses)
-			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
-				result = False
+			if responses != None:
+				result = True
     	
 		except KeyboardInterrupt:
 			self.logger	.info("Stopped by user")
@@ -95,8 +95,8 @@ class Session(object):
 			request = gnmi_pb2.GetRequest()
 			responses = self.stub.Get(request, metadata=self.options.metadata)
 			self.logger.info('GetRequest Response: %s', responses)
-			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
-				result = False
+			if responses != None:
+				result = True
     	
 		except KeyboardInterrupt:
 			self.logger	.info("Stopped by user")
@@ -127,8 +127,8 @@ class Session(object):
 			request = gnmi_pb2.SetRequest(update=updates)			
 			responses = self.stub.Get(request, metadata=self.options.metadata)
 			self.logger.info('SetRequest Response: %s', responses)
-			if respose != None and response.error.code == grpc.StatusCode.UNIMPLEMENTED:
-				result = False
+			if responses != None:
+				result = True
     	
 		except KeyboardInterrupt:
 			self.logger	.info("Stopped by user")

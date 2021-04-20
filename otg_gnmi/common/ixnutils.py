@@ -279,6 +279,30 @@ class TestManager:
             return self.init_once, str(ex)
         return self.init_once, None
 
+    async def get_supported_models(self):
+        
+        def get_supported_models(): 
+            supported_models = []
+            otg_model = gnmi_pb2.ModelData(name='open-traffic-generator', organization='otg', version='0.0.1')
+            supported_models.append(otg_model)
+            return supported_models
+
+        def get_supported_encodings(): 
+            supported_encodings = []
+            supported_encodings.append(gnmi_pb2.Encoding.JSON)
+            supported_encodings.append(gnmi_pb2.Encoding.JSON_IETF)
+            supported_encodings.append(gnmi_pb2.Encoding.PROTO)
+            return supported_encodings
+    
+        def get_version(): 
+            return '0.0.1'    
+
+        cap_response = gnmi_pb2.CapabilityResponse(supported_models=get_supported_models(),\
+                supported_encodings=get_supported_encodings(),\
+                gNMI_version=get_version())
+        return cap_response
+
+
     def start_worker_threads(self):
         self.logger.info('Starting all collection threads')
         self.flow_stats_thread = Thread(target=self.collect_flow_stats, args=[])

@@ -30,9 +30,11 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     to restrict the set of data that is utilized.
     Reference: gNMI Specification Section 3.2
     """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
+    response = await TestManager.Instance().get_supported_models()
+    context.set_code(grpc.StatusCode.OK)
+    context.set_details('Success!')
+    return response
+    
 
   async def Get(self, request, context):
     """Retrieve a snapshot of data from the target. A Get RPC requests that the
@@ -116,4 +118,6 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
 
     await TestManager.Instance().deregister_subscription(session, request_iterator)
       
-
+    context.set_code(grpc.StatusCode.OK)
+    context.set_details('Success!')
+    
