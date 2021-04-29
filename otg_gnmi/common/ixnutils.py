@@ -1013,10 +1013,26 @@ class TestManager:
         for path in self.protocol_subscriptions:
             sub = self.protocol_subscriptions[path]
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
-                
-    async def register_subscription(self, session, request_iterator):
+
+    async def get_requests(self, request_iterator, requests):
         try:
-            async for request in request_iterator.__aiter__():  
+            async for request in request_iterator.__aiter__(): 
+                requests.append(request)
+        except Exception as ex:
+            self.logger.error('Exception: %s', str(ex))
+            self.logger.error('Exception: ', exc_info=True)   
+
+    async def register_subscription(self, session, request_iterator):
+        self.lock.acquire()
+        requests = []
+        # Wait for at most 1 second
+        try:    
+            await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
+        except asyncio.TimeoutError as ex:
+            self.logger.error('GetRequets Timedout Exception: %s', str(ex))
+
+        try:
+            for request in requests:  
                 if request == None:
                     continue
                 for subscription in request.subscribe.subscription:
@@ -1037,9 +1053,18 @@ class TestManager:
             self.logger.error('Exception: ', exc_info=True)   
 
         self.dump_all_subscription()
+        self.lock.release()
 
     async def deregister_subscription(self, session, subscriptions):
-        async for request in request_iterator.__aiter__():  
+        self.lock.acquire()
+        requests = []
+        # Wait for at most 1 second
+        try:    
+            await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
+        except asyncio.TimeoutError as ex:
+            self.logger.error('GetRequets Timedout Exception: %s', str(ex))
+
+        for request in requests:  
             for subscription in request.subscribe.subscription:                
                 sub = SubscriptionReq(subscribe, session, subscription)
                 sub.client.register_path(sub.stringpath)
@@ -1051,6 +1076,7 @@ class TestManager:
                 elif sub.type == RequestType.PROTOCOL:
                     self.protocol_subscriptions.pop(sub.stringpath)
         self.dump_all_subscription()
+        self.lock.release()
         self.stop_worker_threads()
     
     async def publish_stats(self, session):
@@ -1068,6 +1094,7 @@ class TestManager:
                 res.append(sub.encoded_stats)
                 sub.client.update_stats(key)
 
+        self.lock.acquire()
         for key in self.port_subscriptions:
             publish(key, self.port_subscriptions, session, results, 'Port')
 
@@ -1076,6 +1103,7 @@ class TestManager:
 
         for key in self.protocol_subscriptions:
             publish(key, self.protocol_subscriptions, session, results, 'Protocol')
+        self.lock.release()
 
         if session.send_sync():
             results.append(self.encode_sync())
@@ -1088,4 +1116,3 @@ class TestManager:
 
 #if __name__ == 'main':
 #setup_test()
-
