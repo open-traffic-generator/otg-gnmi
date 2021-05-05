@@ -6,6 +6,7 @@ class ClientSession(object):
         self.context = context        
         self.subscribed_paths = {}
         self.sent_sync = False
+        self.mode = 0 # STREAM=0, ONCE=1, POLL=2
     
     def send_sync(self):
         if self.sent_sync == False:
@@ -28,3 +29,5 @@ class ClientSession(object):
     def update_stats(self, path):
         if path in self.subscribed_paths:
             self.subscribed_paths[path] += 1
+
+    

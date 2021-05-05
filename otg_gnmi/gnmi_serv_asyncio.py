@@ -98,22 +98,32 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     # https://github.com/grpc/grpc/issues/23070
     #context.add_done_callback(TestManager.Instance().terminate(request_iterator))
     await TestManager.Instance().register_subscription(session, request_iterator)
-
+    self.logger.info('Starting polling stats for mode : %s', \
+      get_subscription_mode_string(session.mode))
     error = False
+    counter = 0
     while await TestManager.Instance().keep_polling():
           
       try:
         responses = await TestManager.Instance().publish_stats(session)
         for response in responses:
           if response != None:
-            self.logger.info('Response: %s', response)
+            self.logger.info('Response[%s]: %s', counter, response)
             yield response
+        counter = counter + 1
+        if (session.mode == gnmi_pb2.SubscriptionList.Mode.ONCE or \
+          session.mode == gnmi_pb2.SubscriptionList.Mode.POLL) and \
+            session.sent_sync == True:
+            self.logger.info('Completed for %s, sync sent %s', \
+                  get_subscription_mode_string(session.mode), session.sent_sync)
+            break
       except Exception as innerEx:
         self.logger.error('Exception: %s', str(innerEx))
         self.logger.error('Exception: ', exc_info=True)
         error = True
       if error:
         break
+
       await asyncio.sleep(2)
 
     await TestManager.Instance().deregister_subscription(session, request_iterator)

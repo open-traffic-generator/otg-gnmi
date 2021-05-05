@@ -42,7 +42,7 @@ def init_logging(name):
     return logfile
 '''
 
-def init_logging(logger_name, level=logging.INFO):
+def init_logging(logger_name, level=logging.DEBUG):
     l = logging.getLogger(logger_name)
     logfile = logger_name+'-'+str(get_current_time())+'.log'
     logs_dir = os.path.join(os.path.curdir, 'logs')
@@ -161,3 +161,10 @@ def get_subscription_type(path):
         return RequestType.PROTOCOL
     return RequestType.UNKNOWN
 
+def get_subscription_mode_string(mode):
+    if mode == 0:
+        return 'STREAM'
+    if mode == 1:
+        return 'ONCE'
+    if mode == 2:
+        return 'POLL'

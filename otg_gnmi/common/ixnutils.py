@@ -1035,6 +1035,7 @@ class TestManager:
             for request in requests:  
                 if request == None:
                     continue
+                session.mode = request.subscribe.mode
                 for subscription in request.subscribe.subscription:
                     sub = SubscriptionReq(request.subscribe, session, subscription)
                     sub.client.register_path(sub.stringpath)
@@ -1055,7 +1056,7 @@ class TestManager:
         self.dump_all_subscription()
         self.lock.release()
 
-    async def deregister_subscription(self, session, subscriptions):
+    async def deregister_subscription(self, session, request_iterator):
         self.lock.acquire()
         requests = []
         # Wait for at most 1 second
@@ -1077,7 +1078,7 @@ class TestManager:
                     self.protocol_subscriptions.pop(sub.stringpath)
         self.dump_all_subscription()
         self.lock.release()
-        self.stop_worker_threads()
+        #self.stop_worker_threads()
     
     async def publish_stats(self, session):
         results = []
