@@ -2,6 +2,7 @@
 from concurrent import futures
 import grpc
 import grpc.experimental.aio as grpc_async
+from grpc_reflection.v1alpha import reflection
 import asyncio
 import logging
 import argparse
@@ -24,6 +25,13 @@ class AsyncServer:
         grpc_async.init_grpc_aio()
         server = grpc.aio.server()
         gnmi_pb2_grpc.add_gNMIServicer_to_server(AsyncGnmiService(args), server)
+        SERVICE_NAMES = (
+            gnmi_pb2.DESCRIPTOR.services_by_name['gNMI'].full_name,
+            reflection.SERVICE_NAME,
+        )
+        reflection.enable_server_reflection(SERVICE_NAMES, server)
+
+        
         
         server_address = "[::]:{}".format(args.server_port)
         app_name = "Athena"
