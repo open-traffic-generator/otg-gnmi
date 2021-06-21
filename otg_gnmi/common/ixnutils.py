@@ -1021,6 +1021,7 @@ class TestManager:
         except asyncio.TimeoutError as ex:
             self.logger.error('GetRequets Timedout Exception: %s', str(ex))
 
+        self.logger.info('Register Subscription for %s elements', len(requests))
         try:
             for request in requests:  
                 if request == None:
@@ -1048,6 +1049,7 @@ class TestManager:
 
     async def deregister_subscription(self, session, request_iterator):
         self.lock.acquire()
+        
         requests = []
         self.logger.info('Deregister Subscription')
         try:    
@@ -1055,18 +1057,27 @@ class TestManager:
         except asyncio.TimeoutError as ex:
             self.logger.error('GetRequets Timedout Exception: %s', str(ex))
 
-        for request in requests:  
-            for subscription in request.subscribe.subscription:                
-                sub = SubscriptionReq(request.subscribe, session, subscription)
-                sub.client.deregister_path(sub.stringpath)
-                self.logger.info('Deregister Subscription %s', sub.stringpath)
-                if sub.type == RequestType.PORT:
-                    self.port_subscriptions.pop(sub.stringpath)
-                elif sub.type == RequestType.FLOW:
-                    self.flow_subscriptions.pop(sub.stringpath)
-                elif sub.type == RequestType.PROTOCOL:
-                    self.protocol_subscriptions.pop(sub.stringpath)
-        self.dump_all_subscription()
+        self.logger.info('Deregister Subscription for %s elements', len(requests))
+        try:
+            for request in requests:
+                if request == None:
+                    continue
+                session.mode = request.subscribe.mode
+                for subscription in request.subscribe.subscription:                
+                    sub = SubscriptionReq(request.subscribe, session, subscription)
+                    sub.client.deregister_path(sub.stringpath)
+                    self.logger.info('Deregister Subscription %s', sub.stringpath)
+                    if sub.type == RequestType.PORT:
+                        self.port_subscriptions.pop(sub.stringpath)
+                    elif sub.type == RequestType.FLOW:
+                        self.flow_subscriptions.pop(sub.stringpath)
+                    elif sub.type == RequestType.PROTOCOL:
+                        self.protocol_subscriptions.pop(sub.stringpath)
+        except Exception as ex:
+            self.logger.error('Exception: %s', str(ex))
+            self.logger.error('Exception: ', exc_info=True)   
+
+        self.dump_all_subscription()        
         self.lock.release()
         #self.stop_worker_threads()
     
