@@ -74,7 +74,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: otgservices/otg-gnmi-server/0.0.6
+          repository: otgservices/otg-gnmi-server/0.0.7
           tag_with_ref: true
 
     
