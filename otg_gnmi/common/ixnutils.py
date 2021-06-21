@@ -17,22 +17,7 @@ from ..autogen import otg_pb2
 from .utils import *
 from .client_session import *
 
-class TimeIt(object):
-    def __call__(self, f):
-        @functools.wraps(f)
-        def decorated(*args, **kwds):
-            with self:
-                print ('Executing: %s(%s)' % (f, args))
-                return f(*args, **kwds)
-        return decorated
-
-    def __enter__(self):
-        self.start_time = time.time()
-
-    def __exit__(self, *args, **kw):
-        elapsed = time.time() - self.start_time
-        print("{:.3} sec".format(elapsed))
-
+POLL_INTERVAL = 2
 
 g_RequestId = -1
 def get_request_id():
@@ -378,31 +363,34 @@ class TestManager:
 
     
     def collect_flow_stats(self):
+        global POLL_INTERVAL
         self.logger.info('Started flow stats collection thread')
         while self.stopped == False:
             if len(self.flow_subscriptions) > 0:
                 self.collect_stats(self.flow_subscriptions,\
                         self.get_flow_metric, 'Flow')            
-            time.sleep(5)
+            time.sleep(POLL_INTERVAL)
         
 
     def collect_port_stats(self):
+        global POLL_INTERVAL
         self.logger.info('Started port stats collection thread')
         while self.stopped == False:
             if len(self.port_subscriptions) > 0:
                 self.collect_stats(self.port_subscriptions,\
                         self.get_port_metric, 'Port')            
-            time.sleep(5)
+            time.sleep(POLL_INTERVAL)
         
 
     def collect_protocol_stats(self):
-        time.sleep(6)
+        global POLL_INTERVAL
+        time.sleep(POLL_INTERVAL)
         self.logger.info('Started protocol stats collection thread')
         while self.stopped == False:
             if len(self.protocol_subscriptions) > 0:
                 self.collect_stats(self.protocol_subscriptions,\
                         self.get_bgpv4_metric, 'Protocol')            
-            time.sleep(5)
+            time.sleep(POLL_INTERVAL)
     
     def get_api(self):
         if self.init_once:
@@ -417,6 +405,8 @@ class TestManager:
         
         if self.app_mode == 'ixnetwork':
             self.api = snappi.api(host=target, ext='ixnetwork')
+            global POLL_INTERVAL
+            POLL_INTERVAL = POLL_INTERVAL* 2
         else:
             self.api = snappi.api(host=target)
         self.logger.info('Initialized snappi...')
@@ -1025,7 +1015,7 @@ class TestManager:
     async def register_subscription(self, session, request_iterator):
         self.lock.acquire()
         requests = []
-        # Wait for at most 1 second
+        self.logger.info('Register Subscription')
         try:    
             await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
         except asyncio.TimeoutError as ex:
@@ -1040,7 +1030,7 @@ class TestManager:
                     sub = SubscriptionReq(request.subscribe, session, subscription)
                     sub.client.register_path(sub.stringpath)
                     sub.encoding = request.subscribe.encoding
-                    #self.logger.info('Register Subscription %s', sub.stringpath)
+                    self.logger.info('Register Subscription %s', sub.stringpath)
                     if sub.type == RequestType.PORT:
                         self.port_subscriptions[sub.stringpath] = sub
                     elif sub.type == RequestType.FLOW:
@@ -1059,7 +1049,7 @@ class TestManager:
     async def deregister_subscription(self, session, request_iterator):
         self.lock.acquire()
         requests = []
-        # Wait for at most 1 second
+        self.logger.info('Deregister Subscription')
         try:    
             await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
         except asyncio.TimeoutError as ex:
@@ -1067,9 +1057,9 @@ class TestManager:
 
         for request in requests:  
             for subscription in request.subscribe.subscription:                
-                sub = SubscriptionReq(subscribe, session, subscription)
-                sub.client.register_path(sub.stringpath)
-                #self.logger.info('Deregister Subscription %s', sub.stringpath)
+                sub = SubscriptionReq(request.subscribe, session, subscription)
+                sub.client.deregister_path(sub.stringpath)
+                self.logger.info('Deregister Subscription %s', sub.stringpath)
                 if sub.type == RequestType.PORT:
                     self.port_subscriptions.pop(sub.stringpath)
                 elif sub.type == RequestType.FLOW:
