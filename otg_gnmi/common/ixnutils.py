@@ -323,7 +323,7 @@ class TestManager:
     async def remove_session(self, context):
         self.lock.acquire()        
         if context in self.client_sessions:
-            session = self.client_session.pop(context)
+            session = self.client_sessions.pop(context)
             self.logger.info('Removed new session %s', context)        
         self.lock.release()
         return session
