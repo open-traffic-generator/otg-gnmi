@@ -5,6 +5,7 @@ import asyncio
 import time
 from threading import Thread, Lock
 import traceback
+import copy
 
 
 from google.protobuf.any_pb2 import Any
@@ -1005,8 +1006,10 @@ class TestManager:
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
     async def get_requests(self, request_iterator, requests):
+        # Make local copy otherwise the interator will be reset
+        local_copy = copy.deepcopy(request_iterator)
         try:
-            async for request in request_iterator.__aiter__(): 
+            async for request in local_copy.__aiter__(): 
                 requests.append(request)
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
@@ -1019,7 +1022,7 @@ class TestManager:
         try:    
             await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
         except asyncio.TimeoutError as ex:
-            self.logger.error('GetRequets Timedout Exception: %s', str(ex))
+            self.logger.error('GetRequests timed out exception: %s', str(ex))
 
         self.logger.info('Register Subscription for %s elements', len(requests))
         try:
@@ -1055,7 +1058,7 @@ class TestManager:
         try:    
             await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
         except asyncio.TimeoutError as ex:
-            self.logger.error('GetRequets Timedout Exception: %s', str(ex))
+            self.logger.error('GetRequests timed out exception: %s', str(ex))
 
         self.logger.info('Deregister Subscription for %s elements', len(requests))
         try:
