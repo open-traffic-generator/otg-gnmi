@@ -254,11 +254,6 @@ class TestManager:
                 self.get_api()
                 self.start_worker_threads()
                 
-                '''
-                if self.unittest == False:
-                    self.setup_test()
-                    self.start_test()
-                '''
                 self.init_once = True
                 return self.init_once, None
         except Exception as ex:
@@ -312,16 +307,46 @@ class TestManager:
         await self.deregister_subscription(request_iterator)
         self.dump_all_subscription()
 
-    async def create_new_session(self, context):
+    async def create_session(self, context, request_iterator):
         self.lock.acquire()        
         session = None
         if context in self.client_sessions:
             session = self.client_sessions[context]
         else:
-            session = ClientSession(context)
+            requests = await self.parse_requests(request_iterator)
+            session = ClientSession(context, requests)
             self.client_sessions[context] = session
+            self.logger.info('Created new session %s', context)
         self.lock.release()
         return session
+    
+    async def remove_session(self, context):
+        self.lock.acquire()        
+        if context in self.client_sessions:
+            session = self.client_session.pop(context)
+            self.logger.info('Removed new session %s', context)        
+        self.lock.release()
+        return session
+
+    async def parse_requests(self, request_iterator):
+        requests = []
+        try:
+            self.logger.info('Parsing request')            
+            requests = await asyncio.wait_for(self._parse_requests(request_iterator), timeout=2.0)
+        except asyncio.TimeoutError as ex:
+            self.logger.error('parse_requests timed out exception: %s', str(ex))
+        return requests
+
+    async def _parse_requests(self, request_iterator):
+        requests = []
+        try:
+            self.logger.info('Parsing request async')        
+            async for request in request_iterator.__aiter__(): 
+                requests.append(request)
+        except Exception as ex:
+            self.logger.error('Exception: %s', str(ex))
+            self.logger.error('Exception: ', exc_info=True)   
+        return requests
 
     def collect_stats(self, subscriptions, func, meta):
         self.lock.acquire()        
@@ -359,9 +384,6 @@ class TestManager:
         except Exception:
             self.logger.error("Fatal error in collecting stats for %s: names:%s", meta, names)
             self.logger.error("Fatal error: ", exc_info=True)
-            
-            
-
     
     def collect_flow_stats(self):
         global POLL_INTERVAL
@@ -413,523 +435,6 @@ class TestManager:
         self.logger.info('Initialized snappi...')
         return self.api
   
-    def setup_test(self):
-        self.setup_b2b_test()
-        #self.setup_dut_test()
-
-    def setup_dut_test(self):
-        self.logger.info('Setting up test...')
-        jsonRequest = """
-        {
-            "ports": [
-                {
-                "location": "10.36.74.135;1;1",
-                "name": "P1"
-                },
-                {
-                "location": "10.36.74.135;1;2",
-                "name": "P2"
-                }
-            ],
-            "options": {
-                "port_options": {
-                "location_preemption": true
-                }
-            },
-            "devices": [
-                {
-                    "container_name": "P1",
-                    "device_count": 3,
-                    "name": "BGP Router 1",
-                    "ethernet": {
-                        "name": "Ethernet 1",
-                        "ipv4": {
-                            "name": "IPv4 1",
-                            "bgpv4": {
-                                "name": "BGP Peer 1",
-                                "router_id": {
-                                    "values": [
-                                        "2.2.2.2",
-                                        "2.2.2.3",
-                                        "2.2.2.4"
-                                    ],
-                                    "choice": "values"
-                                },
-                                "dut_ipv4_address": {
-                                    "choice": "value",
-                                    "value": "20.20.20.2"
-                                },
-                                "as_type": "ibgp",
-                                "as_number": {
-                                    "choice": "value",
-                                    "value": "3000"
-                                },
-                                "bgpv4_route_ranges" : [
-                                    {
-                                        "name" : "Network Group 1",
-                                        "range_count" : 4,
-                                        "address_count" : 1,
-                                        "address" : {
-                                            "choice": "increment",
-                                            "increment": {
-                                                "start" : "200.1.0.0",
-                                                "step" : "0.1.0.0"
-                                            }
-                                        }
-                                    }
-                                ]
-                            },
-                            "address": {
-                                "values": [
-                                "20.20.20.11",
-                                "20.20.20.12",
-                                "20.20.20.13"
-                                ],
-                                "choice": "values"
-                            },
-                            "gateway": {
-                                "choice": "value",
-                                "value": "20.20.20.2"
-                            }
-                        }
-                    }
-                },
-                {
-                    "container_name": "P2",
-                    "device_count": 3,
-                    "name": "BGP Router 2",
-                    "ethernet": {
-                        "name": "Ethernet 2",
-                        "ipv4": {
-                            "name": "IPv4 2",
-                            "bgpv4": {
-                                "name": "BGP Peer 2",
-                                "router_id": {
-                                    "values": [
-                                        "3.2.2.2",
-                                        "3.2.2.3",
-                                        "3.2.2.4"
-                                    ],
-                                    "choice": "values"
-                                },
-                                "dut_ipv4_address": {
-                                    "choice": "value",
-                                    "value": "20.20.20.2"
-                                },
-                                "as_type": "ibgp",
-                                "as_number": {
-                                    "choice": "value",
-                                    "value": "3000"
-                                },
-                                "bgpv4_route_ranges" : [
-                                    {
-                                        "name" : "Network Group 2",
-                                        "range_count" : 4,
-                                        "address_count" : 1,
-                                        "address" : {
-                                            "choice": "increment",
-                                            "increment": {
-                                                "start" : "100.1.0.0",
-                                                "step" : "0.1.0.0"
-                                            }
-                                        }
-                                    }
-                                ]
-                            },
-                            "address": {
-                                "values": [
-                                "20.20.20.21",
-                                "20.20.20.22",
-                                "20.20.20.23"
-                                ],
-                                "choice": "values"
-                            },
-                            "gateway": {
-                                "choice": "value",
-                                "value": "20.20.20.2"
-                            }
-                        }
-                    }
-                }
-            ],
-            "flows": [
-                {
-                    "name": "F1",
-                    "tx_rx": {
-                        "choice": "port",
-                        "port": {
-                            "tx_name": "P1",
-                            "rx_name": "P2"
-                        }
-                    },
-                    "size": {
-                        "choice": "fixed",
-                        "fixed": 1518
-                    },
-                    "rate": {
-                        "choice": "pps",
-                        "pps": 5
-                    },
-                    "duration": {
-                        "choice": "continuous"
-                    },
-                    "packet": [
-                        {
-                            "choice": "ethernet",
-                            "ethernet": {
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:BB"
-                                },
-                                "src": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:AA"
-                                }
-                            }
-                        },
-                        {
-                            "choice": "ipv4",
-                            "ipv4": {
-                                "src": {
-                                    "choice": "value",
-                                    "value": "20.10.0.1"
-                                },
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "20.10.0.2"
-                                }
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "F2",
-                    "tx_rx": {
-                        "choice": "port",
-                        "port": {
-                            "tx_name": "P2",
-                            "rx_name": "P1"
-                        }
-                    },
-                    "size": {
-                        "choice": "fixed",
-                        "fixed": 1518
-                    },
-                    "rate": {
-                        "choice": "pps",
-                        "pps": 5
-                    },
-                    "duration": {
-                        "choice": "fixed_packets",
-                        "fixed_packets": {
-                            "packets": 500
-                        }
-                    },
-                    "packet": [
-                        {
-                            "choice": "ethernet",
-                            "ethernet": {
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:CB"
-                                },
-                                "src": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:CA"
-                                }
-                            }
-                        },
-                        {
-                            "choice": "ipv4",
-                            "ipv4": {
-                                "src": {
-                                    "choice": "value",
-                                    "value": "30.10.0.1"
-                                },
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "30.10.0.2"
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-        """
-
-        response = self.api.set_config(jsonRequest)        
-        self.logger.info('Setup test done...')
-
-    def setup_b2b_test(self):
-        self.logger.info('Setting up test...')
-        jsonRequest = """
-        {
-            "ports": [
-                {
-                "location": "10.72.47.17;1;1",
-                "name": "P1"
-                },
-                {
-                "location": "10.72.47.17;1;2",
-                "name": "P2"
-                }
-            ],
-            "options": {
-                "port_options": {
-                "location_preemption": true
-                }
-            },
-            "devices": [
-                {
-                    "container_name": "P1",
-                    "device_count": 3,
-                    "name": "BGP Router 1",
-                    "ethernet": {
-                        "name": "Ethernet 1",
-                        "ipv4": {
-                            "name": "IPv4 1",
-                            "bgpv4": {
-                                "name": "BGP Peer 1",
-                                "router_id": {
-                                    "values": [
-                                        "2.2.2.2",
-                                        "2.2.2.3",
-                                        "2.2.2.4"
-                                    ],
-                                    "choice": "values"
-                                },
-                                "dut_ipv4_address": {
-                                    "choice": "values",
-                                    "values": [
-                                        "20.20.20.21",
-                                        "20.20.20.22",
-                                        "20.20.20.23"
-                                    ],
-                                },
-                                "as_type": "ibgp",
-                                "as_number": {
-                                    "choice": "value",
-                                    "value": "3000"
-                                },
-                                "bgpv4_route_ranges" : [
-                                    {
-                                        "name" : "Network Group 1",
-                                        "range_count" : 4,
-                                        "address_count" : 1,
-                                        "address" : {
-                                            "choice": "increment",
-                                            "increment": {
-                                                "start" : "200.1.0.0",
-                                                "step" : "0.1.0.0"
-                                            }
-                                        }
-                                    }
-                                ]
-                            },
-                            "address": {
-                                "values": [
-                                "20.20.20.11",
-                                "20.20.20.12",
-                                "20.20.20.13"
-                                ],
-                                "choice": "values"
-                            },
-                            "gateway": {
-                                "choice": "values",
-                                "values": [
-                                    "20.20.20.21",
-                                    "20.20.20.22",
-                                    "20.20.20.23"
-                                ],
-                            }
-                        }
-                    }
-                },
-                {
-                    "container_name": "P2",
-                    "device_count": 3,
-                    "name": "BGP Router 2",
-                    "ethernet": {
-                        "name": "Ethernet 2",
-                        "ipv4": {
-                            "name": "IPv4 2",
-                            "bgpv4": {
-                                "name": "BGP Peer 2",
-                                "router_id": {
-                                    "values": [
-                                        "3.2.2.2",
-                                        "3.2.2.3",
-                                        "3.2.2.4"
-                                    ],
-                                    "choice": "values"
-                                },
-                                "dut_ipv4_address": {
-                                    "values": [
-                                        "20.20.20.11",
-                                        "20.20.20.12",
-                                        "20.20.20.13"
-                                    ],
-                                    "choice": "values"
-                                },
-                                "as_type": "ibgp",
-                                "as_number": {
-                                    "choice": "value",
-                                    "value": "3000"
-                                },
-                                "bgpv4_route_ranges" : [
-                                    {
-                                        "name" : "Network Group 2",
-                                        "range_count" : 4,
-                                        "address_count" : 1,
-                                        "address" : {
-                                            "choice": "increment",
-                                            "increment": {
-                                                "start" : "100.1.0.0",
-                                                "step" : "0.1.0.0"
-                                            }
-                                        }
-                                    }
-                                ]
-                            },
-                            "address": {
-                                "values": [
-                                "20.20.20.21",
-                                "20.20.20.22",
-                                "20.20.20.23"
-                                ],
-                                "choice": "values"
-                            },
-                            "gateway": {
-                                "values": [
-                                    "20.20.20.11",
-                                    "20.20.20.12",
-                                    "20.20.20.13"
-                                ],
-                                "choice": "values"
-                            }
-                        }
-                    }
-                }
-            ],
-            "flows": [
-                {
-                    "name": "F1",
-                    "tx_rx": {
-                        "choice": "port",
-                        "port": {
-                            "tx_name": "P1",
-                            "rx_name": "P2"
-                        }
-                    },
-                    "size": {
-                        "choice": "fixed",
-                        "fixed": 1518
-                    },
-                    "rate": {
-                        "choice": "pps",
-                        "pps": 5
-                    },
-                    "duration": {
-                        "choice": "continuous"
-                    },
-                    "packet": [
-                        {
-                            "choice": "ethernet",
-                            "ethernet": {
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:BB"
-                                },
-                                "src": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:AA"
-                                }
-                            }
-                        },
-                        {
-                            "choice": "ipv4",
-                            "ipv4": {
-                                "src": {
-                                    "choice": "value",
-                                    "value": "20.10.0.1"
-                                },
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "20.10.0.2"
-                                }
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "F2",
-                    "tx_rx": {
-                        "choice": "port",
-                        "port": {
-                            "tx_name": "P2",
-                            "rx_name": "P1"
-                        }
-                    },
-                    "size": {
-                        "choice": "fixed",
-                        "fixed": 1518
-                    },
-                    "rate": {
-                        "choice": "pps",
-                        "pps": 5
-                    },
-                    "duration": {
-                        "choice": "fixed_packets",
-                        "fixed_packets": {
-                            "packets": 500
-                        }
-                    },
-                    "packet": [
-                        {
-                            "choice": "ethernet",
-                            "ethernet": {
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:CB"
-                                },
-                                "src": {
-                                    "choice": "value",
-                                    "value": "00:00:00:00:00:CA"
-                                }
-                            }
-                        },
-                        {
-                            "choice": "ipv4",
-                            "ipv4": {
-                                "src": {
-                                    "choice": "value",
-                                    "value": "30.10.0.1"
-                                },
-                                "dst": {
-                                    "choice": "value",
-                                    "value": "30.10.0.2"
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-        """
-
-        response = self.api.set_config(jsonRequest)        
-        self.logger.info('Setup test done...')
-
-    def start_test(self):
-        jsonRequest = """
-                {
-                    "flow_names": null,
-                    "state" : "start"
-                }
-           """
-        self.api.set_transmit_state(jsonRequest)
-
     def get_flow_metric(self, flow_names, stat_names=None):         
         api = self.get_api()        
         req = api.metrics_request()
@@ -954,8 +459,7 @@ class TestManager:
     def get_bgpv4_metric(self, device_names, stat_names=None):
         api = self.get_api()        
         req = api.metrics_request()
-        #req.bgpv4.device_names = device_names
-        req.bgpv4.device_names = [] # [] gets all stats
+        req.bgpv4.device_names = device_names
         res = api.get_metrics(req)
         return res.bgpv4_metrics
     
@@ -1005,28 +509,11 @@ class TestManager:
             sub = self.protocol_subscriptions[path]
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-    async def get_requests(self, request_iterator, requests):
-        # Make local copy otherwise the interator will be reset
-        local_copy = copy.deepcopy(request_iterator)
-        try:
-            async for request in local_copy.__aiter__(): 
-                requests.append(request)
-        except Exception as ex:
-            self.logger.error('Exception: %s', str(ex))
-            self.logger.error('Exception: ', exc_info=True)   
-
-    async def register_subscription(self, session, request_iterator):
+    async def register_subscription(self, session):
         self.lock.acquire()
-        requests = []
-        self.logger.info('Register Subscription')
-        try:    
-            await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
-        except asyncio.TimeoutError as ex:
-            self.logger.error('GetRequests timed out exception: %s', str(ex))
-
-        self.logger.info('Register Subscription for %s elements', len(requests))
+        self.logger.info('Register Subscription for %s elements', len(session.requests))
         try:
-            for request in requests:  
+            for request in session.requests:  
                 if request == None:
                     continue
                 session.mode = request.subscribe.mode
@@ -1050,19 +537,12 @@ class TestManager:
         self.dump_all_subscription()
         self.lock.release()
 
-    async def deregister_subscription(self, session, request_iterator):
+    async def deregister_subscription(self, session):
         self.lock.acquire()
         
-        requests = []
-        self.logger.info('Deregister Subscription')
-        try:    
-            await asyncio.wait_for(self.get_requests(request_iterator, requests), timeout=1.0)
-        except asyncio.TimeoutError as ex:
-            self.logger.error('GetRequests timed out exception: %s', str(ex))
-
-        self.logger.info('Deregister Subscription for %s elements', len(requests))
+        self.logger.info('Deregister Subscription for %s elements', len(session.requests))
         try:
-            for request in requests:
+            for request in session.requests:
                 if request == None:
                     continue
                 session.mode = request.subscribe.mode

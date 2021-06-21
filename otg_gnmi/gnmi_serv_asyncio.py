@@ -94,10 +94,10 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
       context.set_details(error)
       raise Exception(error)
     
-    session = await TestManager.Instance().create_new_session(context)
+    session = await TestManager.Instance().create_session(context, request_iterator)
     # https://github.com/grpc/grpc/issues/23070
     #context.add_done_callback(TestManager.Instance().terminate(request_iterator))
-    await TestManager.Instance().register_subscription(session, request_iterator)
+    await TestManager.Instance().register_subscription(session)
     self.logger.info('Starting polling stats for mode : %s', \
       get_subscription_mode_string(session.mode))
     error = False
@@ -124,9 +124,8 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
       if error:
         break
 
-      await asyncio.sleep(2)
-
-    await TestManager.Instance().deregister_subscription(session, request_iterator)
+    await TestManager.Instance().deregister_subscription(session)
+    await TestManager.Instance().remove_session(context)
       
     context.set_code(grpc.StatusCode.OK)
     context.set_details('Success!')
