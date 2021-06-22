@@ -313,7 +313,12 @@ class TestManager:
         if context in self.client_sessions:
             session = self.client_sessions[context]
         else:
-            requests = await self.parse_requests(request_iterator)
+            requests = []
+            try:    
+                await asyncio.wait_for(self.parse_requests(request_iterator, requests), timeout=1.0)
+            except asyncio.TimeoutError as ex:
+                self.logger.error('Parse request timed out exception: %s', str(ex))
+                
             session = ClientSession(context, requests)
             self.client_sessions[context] = session
             self.logger.info('Created new session %s', context)
@@ -328,25 +333,13 @@ class TestManager:
         self.lock.release()
         return session
 
-    async def parse_requests(self, request_iterator):
-        requests = []
+    async def parse_requests(self, request_iterator, requests):
         try:
-            self.logger.info('Parsing request')            
-            requests = await asyncio.wait_for(self._parse_requests(request_iterator), timeout=2.0)
-        except asyncio.TimeoutError as ex:
-            self.logger.error('parse_requests timed out exception: %s', str(ex))
-        return requests
-
-    async def _parse_requests(self, request_iterator):
-        requests = []
-        try:
-            self.logger.info('Parsing request async')        
             async for request in request_iterator.__aiter__(): 
                 requests.append(request)
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
-            self.logger.error('Exception: ', exc_info=True)   
-        return requests
+            self.logger.error('Exception: ', exc_info=True)
 
     def collect_stats(self, subscriptions, func, meta):
         self.lock.acquire()        
