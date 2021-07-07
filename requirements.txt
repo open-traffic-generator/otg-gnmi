@@ -1,8 +1,8 @@
 grpcio==1.35.0
 grpcio-tools==1.35.0
 protobuf==3.14.0
-snappi==0.3.14
-snappi[ixnetwork]==0.1.39
+snappi==0.4.0
+snappi[ixnetwork]==0.4.0
 grpclib==0.4.1
 pytest==6.2.3
 pytest-grpc==0.8.0

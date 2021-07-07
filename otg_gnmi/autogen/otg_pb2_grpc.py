@@ -16,53 +16,53 @@ class OpenapiStub(object):
             channel: A grpc.Channel.
         """
         self.GetConfig = channel.unary_unary(
-                '/openapi.Openapi/GetConfig',
+                '/otg.Openapi/GetConfig',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=otg__pb2.Config.FromString,
                 )
         self.SetConfig = channel.unary_unary(
-                '/openapi.Openapi/SetConfig',
-                request_serializer=otg__pb2.SetConfigRequest.SerializeToString,
-                response_deserializer=otg__pb2.Details.FromString,
+                '/otg.Openapi/SetConfig',
+                request_serializer=otg__pb2.SetConfigParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
                 )
         self.UpdateConfig = channel.unary_unary(
-                '/openapi.Openapi/UpdateConfig',
-                request_serializer=otg__pb2.UpdateConfigRequest.SerializeToString,
-                response_deserializer=otg__pb2.Details.FromString,
+                '/otg.Openapi/UpdateConfig',
+                request_serializer=otg__pb2.UpdateConfigParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
                 )
         self.SetTransmitState = channel.unary_unary(
-                '/openapi.Openapi/SetTransmitState',
-                request_serializer=otg__pb2.SetTransmitStateRequest.SerializeToString,
-                response_deserializer=otg__pb2.Details.FromString,
+                '/otg.Openapi/SetTransmitState',
+                request_serializer=otg__pb2.SetTransmitStateParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
                 )
         self.SetLinkState = channel.unary_unary(
-                '/openapi.Openapi/SetLinkState',
-                request_serializer=otg__pb2.SetLinkStateRequest.SerializeToString,
-                response_deserializer=otg__pb2.Details.FromString,
+                '/otg.Openapi/SetLinkState',
+                request_serializer=otg__pb2.SetLinkStateParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
                 )
         self.SetCaptureState = channel.unary_unary(
-                '/openapi.Openapi/SetCaptureState',
-                request_serializer=otg__pb2.SetCaptureStateRequest.SerializeToString,
-                response_deserializer=otg__pb2.Details.FromString,
+                '/otg.Openapi/SetCaptureState',
+                request_serializer=otg__pb2.SetCaptureStateParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
+                )
+        self.SetRouteState = channel.unary_unary(
+                '/otg.Openapi/SetRouteState',
+                request_serializer=otg__pb2.SetRouteStateParameters.SerializeToString,
+                response_deserializer=otg__pb2.ResponseWarning.FromString,
                 )
         self.GetMetrics = channel.unary_unary(
-                '/openapi.Openapi/GetMetrics',
-                request_serializer=otg__pb2.GetMetricsRequest.SerializeToString,
+                '/otg.Openapi/GetMetrics',
+                request_serializer=otg__pb2.GetMetricsParameters.SerializeToString,
                 response_deserializer=otg__pb2.MetricsResponse.FromString,
                 )
         self.GetStateMetrics = channel.unary_unary(
-                '/openapi.Openapi/GetStateMetrics',
+                '/otg.Openapi/GetStateMetrics',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=otg__pb2.StateMetrics.FromString,
                 )
-        self.GetCapabilities = channel.unary_unary(
-                '/openapi.Openapi/GetCapabilities',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=otg__pb2.Capabilities.FromString,
-                )
         self.GetCapture = channel.unary_unary(
-                '/openapi.Openapi/GetCapture',
-                request_serializer=otg__pb2.GetCaptureRequest.SerializeToString,
+                '/otg.Openapi/GetCapture',
+                request_serializer=otg__pb2.GetCaptureParameters.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -78,42 +78,49 @@ class OpenapiServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SetConfig(self, request, context):
-        """option (google.api.http) = { post:"/config" body:"config"  };
+        """option (google.api.http) = { post:"/config"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UpdateConfig(self, request, context):
-        """option (google.api.http) = { patch:"/config" body:"config"  };
+        """option (google.api.http) = { patch:"/config"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SetTransmitState(self, request, context):
-        """option (google.api.http) = { post:"/control/transmit" body:"transmit__state"  };
+        """option (google.api.http) = { post:"/control/transmit"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SetLinkState(self, request, context):
-        """option (google.api.http) = { post:"/control/link" body:"link__state"  };
+        """option (google.api.http) = { post:"/control/link"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SetCaptureState(self, request, context):
-        """option (google.api.http) = { post:"/control/capture" body:"capture__state"  };
+        """option (google.api.http) = { post:"/control/capture"  };
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetRouteState(self, request, context):
+        """option (google.api.http) = { post:"/control/routes"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetMetrics(self, request, context):
-        """option (google.api.http) = { post:"/results/metrics" body:"metrics__request"  };
+        """option (google.api.http) = { post:"/results/metrics"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -126,15 +133,8 @@ class OpenapiServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetCapabilities(self, request, context):
-        """option (google.api.http) = { post:"/results/capabilities"  };
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetCapture(self, request, context):
-        """option (google.api.http) = { post:"/results/capture" body:"capture__request"  };
+        """option (google.api.http) = { post:"/results/capture"  };
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -150,32 +150,37 @@ def add_OpenapiServicer_to_server(servicer, server):
             ),
             'SetConfig': grpc.unary_unary_rpc_method_handler(
                     servicer.SetConfig,
-                    request_deserializer=otg__pb2.SetConfigRequest.FromString,
-                    response_serializer=otg__pb2.Details.SerializeToString,
+                    request_deserializer=otg__pb2.SetConfigParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
             ),
             'UpdateConfig': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateConfig,
-                    request_deserializer=otg__pb2.UpdateConfigRequest.FromString,
-                    response_serializer=otg__pb2.Details.SerializeToString,
+                    request_deserializer=otg__pb2.UpdateConfigParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
             ),
             'SetTransmitState': grpc.unary_unary_rpc_method_handler(
                     servicer.SetTransmitState,
-                    request_deserializer=otg__pb2.SetTransmitStateRequest.FromString,
-                    response_serializer=otg__pb2.Details.SerializeToString,
+                    request_deserializer=otg__pb2.SetTransmitStateParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
             ),
             'SetLinkState': grpc.unary_unary_rpc_method_handler(
                     servicer.SetLinkState,
-                    request_deserializer=otg__pb2.SetLinkStateRequest.FromString,
-                    response_serializer=otg__pb2.Details.SerializeToString,
+                    request_deserializer=otg__pb2.SetLinkStateParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
             ),
             'SetCaptureState': grpc.unary_unary_rpc_method_handler(
                     servicer.SetCaptureState,
-                    request_deserializer=otg__pb2.SetCaptureStateRequest.FromString,
-                    response_serializer=otg__pb2.Details.SerializeToString,
+                    request_deserializer=otg__pb2.SetCaptureStateParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
+            ),
+            'SetRouteState': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetRouteState,
+                    request_deserializer=otg__pb2.SetRouteStateParameters.FromString,
+                    response_serializer=otg__pb2.ResponseWarning.SerializeToString,
             ),
             'GetMetrics': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMetrics,
-                    request_deserializer=otg__pb2.GetMetricsRequest.FromString,
+                    request_deserializer=otg__pb2.GetMetricsParameters.FromString,
                     response_serializer=otg__pb2.MetricsResponse.SerializeToString,
             ),
             'GetStateMetrics': grpc.unary_unary_rpc_method_handler(
@@ -183,19 +188,14 @@ def add_OpenapiServicer_to_server(servicer, server):
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=otg__pb2.StateMetrics.SerializeToString,
             ),
-            'GetCapabilities': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetCapabilities,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=otg__pb2.Capabilities.SerializeToString,
-            ),
             'GetCapture': grpc.unary_unary_rpc_method_handler(
                     servicer.GetCapture,
-                    request_deserializer=otg__pb2.GetCaptureRequest.FromString,
+                    request_deserializer=otg__pb2.GetCaptureParameters.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'openapi.Openapi', rpc_method_handlers)
+            'otg.Openapi', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -214,7 +214,7 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/GetConfig',
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/GetConfig',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             otg__pb2.Config.FromString,
             options, channel_credentials,
@@ -231,9 +231,9 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/SetConfig',
-            otg__pb2.SetConfigRequest.SerializeToString,
-            otg__pb2.Details.FromString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetConfig',
+            otg__pb2.SetConfigParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -248,9 +248,9 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/UpdateConfig',
-            otg__pb2.UpdateConfigRequest.SerializeToString,
-            otg__pb2.Details.FromString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/UpdateConfig',
+            otg__pb2.UpdateConfigParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -265,9 +265,9 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/SetTransmitState',
-            otg__pb2.SetTransmitStateRequest.SerializeToString,
-            otg__pb2.Details.FromString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetTransmitState',
+            otg__pb2.SetTransmitStateParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -282,9 +282,9 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/SetLinkState',
-            otg__pb2.SetLinkStateRequest.SerializeToString,
-            otg__pb2.Details.FromString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetLinkState',
+            otg__pb2.SetLinkStateParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -299,9 +299,26 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/SetCaptureState',
-            otg__pb2.SetCaptureStateRequest.SerializeToString,
-            otg__pb2.Details.FromString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetCaptureState',
+            otg__pb2.SetCaptureStateParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SetRouteState(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetRouteState',
+            otg__pb2.SetRouteStateParameters.SerializeToString,
+            otg__pb2.ResponseWarning.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -316,8 +333,8 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/GetMetrics',
-            otg__pb2.GetMetricsRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/GetMetrics',
+            otg__pb2.GetMetricsParameters.SerializeToString,
             otg__pb2.MetricsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -333,26 +350,9 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/GetStateMetrics',
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/GetStateMetrics',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             otg__pb2.StateMetrics.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetCapabilities(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/GetCapabilities',
-            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            otg__pb2.Capabilities.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -367,8 +367,8 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/openapi.Openapi/GetCapture',
-            otg__pb2.GetCaptureRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/GetCapture',
+            otg__pb2.GetCaptureParameters.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

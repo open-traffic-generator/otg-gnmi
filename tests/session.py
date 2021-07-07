@@ -74,7 +74,7 @@ class Session(object):
 				result = True
     	
 		except KeyboardInterrupt:
-			self.logger	.info("Stopped by user")
+			self.logger.info("Stopped by user")
 			result = False
 
 		except grpc.RpcError as x:
@@ -99,7 +99,7 @@ class Session(object):
 				result = True
     	
 		except KeyboardInterrupt:
-			self.logger	.info("Stopped by user")
+			self.logger.info("Stopped by user")
 			result = False
 
 		except grpc.RpcError as x:
@@ -131,7 +131,7 @@ class Session(object):
 				result = True
     	
 		except KeyboardInterrupt:
-			self.logger	.info("Stopped by user")
+			self.logger.info("Stopped by user")
 			result = False
 
 		except grpc.RpcError as x:
@@ -190,7 +190,7 @@ class Session(object):
 					break
 
 		except KeyboardInterrupt:
-			self.logger	.info("Stopped by user")
+			self.logger.info("Stopped by user")
 			result = False
 
 		except grpc.RpcError as x:
