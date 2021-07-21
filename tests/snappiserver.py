@@ -107,7 +107,7 @@ class SnappiServer(object):
 
     def _wait_until_ready(self):
         flask_logger.info('Init snappi api object ')
-        api = snappi.api(host='http://127.0.0.1:11009')
+        api = snappi.api(location='http://127.0.0.1:11009')
         flask_logger.info('Done Init snappi api object ')
         while True:
             try:

@@ -98,98 +98,21 @@ class SubscriptionReq:
 
     def encode_port_metric(self, stats_json):
         stats = json.loads(stats_json)        
-        metric = otg_pb2.PortMetric()
-
-        if 'name' in stats:
-            metric.name = stats['name']
-        if 'location' in stats:
-            metric.location = stats['location']
-
-        if 'link' in stats:
-            if stats['link'] == 'up':
-                metric.link = otg_pb2.PortMetric.UP
-            if stats['link'] == 'down':
-                metric.link = otg_pb2.PortMetric.DOWN
-        if 'capture' in stats:
-            if stats['capture'] == 'started':            
-                metric.capture = otg_pb2.PortMetric.STARTED
-            if stats['capture'] == 'stopped':
-                metric.capture = otg_pb2.PortMetric.STOPPED
-
-        if 'frames_tx' in stats:
-            metric.frames_tx = stats['frames_tx']
-        if 'frames_rx' in stats:
-            metric.frames_rx =  stats['frames_rx']
-        if 'bytes_tx' in stats:
-            metric.bytes_tx =  stats['bytes_tx']
-        if 'bytes_rx' in stats:
-            metric.bytes_rx =  stats['bytes_rx']
-        if 'frames_tx_rate' in stats:
-            metric.frames_tx_rate =  stats['frames_tx_rate']
-        if 'frames_rx_rate' in stats:
-            metric.frames_rx_rate =  stats['frames_rx_rate']
-        if 'bytes_tx_rate' in stats:
-            metric.bytes_tx_rate =  stats['bytes_tx_rate']
-        if 'bytes_rx_rate' in stats:
-            metric.bytes_rx_rate =  stats['bytes_rx_rate']
+        metric = otg_pb2.PortMetric().deserialize(stats)        
         target = Any()
         target.Pack(metric)
         return target
 
     def encode_flow_metric(self, stats_json):
         stats = json.loads(stats_json)        
-        metric = otg_pb2.FlowMetric()    
-        if 'name' in stats:
-            metric.name = stats['name']
-        
-        if 'transmit' in stats:
-            if stats['transmit'] == 'started':
-                metric.transmit = otg_pb2.FlowMetric.STARTED
-            if stats['transmit'] == 'stopped':
-                metric.transmit = otg_pb2.FlowMetric.STOPPED
-            if stats['transmit'] == 'paused':
-                metric.transmit = otg_pb2.FlowMetric.PAUSED
-        if 'port_tx' in stats:
-            metric.port_tx = stats['port_tx']
-        if 'port_rx' in stats:
-            metric.port_rx = stats['port_rx']
-        if 'frames_tx' in stats:
-            metric.frames_tx = stats['frames_tx']
-        if 'frames_rx' in stats:
-            metric.frames_rx = stats['frames_rx']
-        if 'bytes_tx' in stats:
-            metric.bytes_tx = stats['bytes_tx']
-        if 'bytes_rx' in stats:
-            metric.bytes_rx = stats['bytes_rx']
-        if 'frames_tx_rate' in stats:
-            metric.frames_tx_rate = stats['frames_tx_rate']
-        if 'frames_rx_rate' in stats:
-            metric.frames_rx_rate = stats['frames_rx_rate']
-        if 'loss' in stats:
-            metric.loss = stats['loss']
+        metric = otg_pb2.FlowMetric().deserialize(stats)
         target = Any()
         target.Pack(metric)
         return target
 
     def encode_protocol_metric(self, stats_json):
         stats = json.loads(stats_json)        
-        metric = otg_pb2.Bgpv4Metric()
-        
-        if 'name' in stats:
-            metric.name = stats['name']
-        if 'sessions_total' in stats:
-            metric.sessions_total = stats['sessions_total']
-        if 'sessions_up' in stats:
-            metric.sessions_up = stats['sessions_up']
-        if 'sessions_down' in stats:
-            metric.sessions_down = stats['sessions_down']
-        if 'sessions_not_started' in stats:
-            metric.sessions_not_started = stats['sessions_not_started']
-        if 'routes_advertised' in stats:
-            metric.routes_advertised = stats['routes_advertised']
-        if 'routes_withdrawn' in stats:
-                metric.routes_withdrawn = stats['routes_withdrawn']
-
+        metric = otg_pb2.Bgpv4Metric().deserialize(stats)
         target = Any()
         target.Pack(metric)
         return target
@@ -264,7 +187,7 @@ class TestManager:
         
         def get_supported_models(): 
             supported_models = []
-            otg_model = gnmi_pb2.ModelData(name='open-traffic-generator', organization='otg', version='0.0.1')
+            otg_model = gnmi_pb2.ModelData(name='open-traffic-generator', organization='otg', version=get_version())
             supported_models.append(otg_model)
             return supported_models
 
@@ -420,11 +343,11 @@ class TestManager:
         # when using ixnetwork extension, host is IxNetwork API Server
         
         if self.app_mode == 'ixnetwork':
-            self.api = snappi.api(host=target, ext='ixnetwork')
+            self.api = snappi.api(location=target, ext='ixnetwork')
             global POLL_INTERVAL
             POLL_INTERVAL = POLL_INTERVAL* 2
         else:
-            self.api = snappi.api(host=target)
+            self.api = snappi.api(location=target)
         self.logger.info('Initialized snappi...')
         return self.api
   
