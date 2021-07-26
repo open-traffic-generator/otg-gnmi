@@ -49,6 +49,8 @@ def gnmi_server():
     time.sleep(2) 
     yield gnmi_server
     # Shut it down at the end of the pytest session
+    # Give the server time to flush any pending request
+    time.sleep(2)
     gnmi_server.terminate()
 
 @pytest.fixture(scope='session')

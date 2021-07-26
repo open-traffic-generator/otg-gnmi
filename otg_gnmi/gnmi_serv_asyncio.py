@@ -21,7 +21,7 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
       self.options = ServerOptions(args)
       self.logger = logging.getLogger(self.options.logfile)
       self.target_address = "{}:{}".format(args.target_host, args.target_port)
-    
+  
   async def Capabilities(self, request, context):
     """Capabilities allows the client to retrieve the set of capabilities that
     is supported by the target. This allows the target to validate the
@@ -85,8 +85,8 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     """
 
       
-    self.logger.info("Received subscription request. Metadata: %s", context.invocation_metadata())
-    self.logger.info("Received subscription request. Peer %s, Peer Identities %s", context.peer(), context.peer_identities())
+    self.logger.info('Received subscription request. Metadata: %s', context.invocation_metadata())
+    self.logger.info('Received subscription request. Peer %s, Peer Identities %s', context.peer(), context.peer_identities())
     
     init, error = await TestManager.Instance().init_once_func(self.options)
     if init == False:
@@ -117,9 +117,10 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             self.logger.info('Completed for %s, sync sent %s', \
                   get_subscription_mode_string(session.mode), session.sent_sync)
             break
-      except Exception as innerEx:
+          
+      except BaseException as innerEx:
         self.logger.error('Exception: %s', str(innerEx))
-        self.logger.error('Exception: ', exc_info=True)
+        self.logger.error('Connection closed. Peer %s', context.peer())
         error = True
       if error:
         break

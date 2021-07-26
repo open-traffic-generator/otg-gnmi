@@ -60,7 +60,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: otgservices/otg-gnmi-server:0.4.2
+          tags: otgservices/otg-gnmi-server:0.4.3
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
@@ -74,7 +74,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: otgservices/otg-gnmi-server/0.4.2
+          repository: otgservices/otg-gnmi-server/0.4.3
           tag_with_ref: true
 
     
