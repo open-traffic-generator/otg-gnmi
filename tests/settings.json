@@ -1,0 +1,6 @@
+{
+    "app-mode": "athena-insecure",
+    "target-host": "127.0.0.1",
+    "target-port": "11009",
+    "insecure": true
+}

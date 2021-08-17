@@ -1,0 +1,20 @@
+{
+    "ports": [
+        {
+            "location": "localhost;1;1",
+            "name": "P1"
+        },
+        {
+            "location": "localhost;1;2",
+            "name": "P2"
+        }
+    ],
+    "flows": [
+        {
+            "name": "F1"
+        },
+        {
+            "name": "F2"
+        }
+    ] 
+}
