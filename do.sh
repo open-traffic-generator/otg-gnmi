@@ -20,7 +20,7 @@ install_deps() {
 install_ext_deps() {
     echo "Installing extra dependencies required by this project"
     apt-get -y install curl vim git \
-    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio anyio \
+    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio anyio grpc \
     && apt-get -y clean all
 }
 
