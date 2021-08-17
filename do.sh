@@ -20,7 +20,7 @@ install_deps() {
 install_ext_deps() {
     echo "Installing extra dependencies required by this project"
     apt-get -y install curl vim git \
-    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio anyio grpc \
+    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio asyncio mock \
     && apt-get -y clean all
 }
 
@@ -106,10 +106,10 @@ analyze_test_result() {
 
 analyze_ut_results() {
     echo "Analyzing UT gnmi client results..."
-    analyze_test_result ${UT_API_REPORT}
+    analyze_test_result ${UT_GNMI_CLIENT_REPORT}
 
     echo "Analyzing UT api results..."
-    analyze_test_result ${UT_GNMI_CLIENT_REPORT}
+    analyze_test_result ${UT_API_REPORT}
 }
 
 echo_version() {
