@@ -44,7 +44,7 @@ def load_dict_from_json_file(path):
 
 # path to gnmi_settings.json and gnmi_test_settings.json relative root dir
 GNMI_SETTINGS_FILE = 'gnmi_settings.json'
-GNMI_TEST_SETTINGS_FILE = 'gnmi_test_settings.json'
+GNMI_TEST_CONFIG_FILE = 'gnmi_test_config.json'
 
 class BaseSettings(object):
     def __init__(self, settings_file):
@@ -116,13 +116,13 @@ class GnmiSettings(BaseSettings):
             return True
         return False
 
-class GnmiTestSettings(BaseSettings):
+class GnmiTestConfig(BaseSettings):
     """
-    Singleton for global settings
+    Singleton for global test config
     """
     def __init__(self):
         # these not be defined and are here only for documentation
-        super().__init__(GNMI_TEST_SETTINGS_FILE)
+        super().__init__(GNMI_TEST_CONFIG_FILE)
         self.ports = None
         self.flows = None
         self.load_from_settings_file()
@@ -134,5 +134,5 @@ if __name__ == '__main__':
     print(gnmiSettings.__dict__)
     
 
-    gnmiTestSettings = GnmiTestSettings()
-    print(gnmiTestSettings.__dict__)
+    gnmiTestConfig = GnmiTestConfig()
+    print(gnmiTestConfig.__dict__)

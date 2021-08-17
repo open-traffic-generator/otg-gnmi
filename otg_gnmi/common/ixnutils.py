@@ -6,6 +6,7 @@ import time
 from threading import Thread, Lock
 import traceback
 import copy
+import types
 
 
 from google.protobuf.any_pb2 import Any
@@ -160,7 +161,6 @@ class TestManager:
         try:
             if self.init_once == False:
                 self.app_mode = options.app_mode
-                self.unittest = options.unittest
                 self.target_address = options.target_address
                 self.logger = logging.getLogger(options.logfile)
 
@@ -218,11 +218,15 @@ class TestManager:
         
         
     def stop_worker_threads(self):
-        self.logger.info('Stopping all collection threads')
+        if hasattr(self, 'logger'):
+            self.logger.info('Stopping all collection threads')
         self.stopped = True
-        self.flow_stats_thread.join()
-        self.port_stats_thread.join()
-        self.protocol_stats_thread.join()        
+        if hasattr(self, 'flow_stats_thread'):
+            self.flow_stats_thread.join()
+        if hasattr(self, 'port_stats_thread'):
+            self.port_stats_thread.join()
+        if hasattr(self, 'protocol_stats_thread'):
+            self.protocol_stats_thread.join()        
 
     async def terminate(self, request_iterator):
         self.logger.info('Terminate connection')
@@ -237,11 +241,10 @@ class TestManager:
             session = self.client_sessions[context]
         else:
             requests = []
-            try:    
+            try:
                 await asyncio.wait_for(self.parse_requests(request_iterator, requests), timeout=1.0)
             except asyncio.TimeoutError as ex:
                 self.logger.error('Parse request timed out exception: %s', str(ex))
-                
             session = ClientSession(context, requests)
             self.client_sessions[context] = session
             self.logger.info('Created new session %s', context)
@@ -258,8 +261,13 @@ class TestManager:
 
     async def parse_requests(self, request_iterator, requests):
         try:
-            async for request in request_iterator.__aiter__(): 
-                requests.append(request)
+            if isinstance(request_iterator, types.GeneratorType):
+                for request in request_iterator: 
+                    requests.append(request)
+            else:
+                async for request in request_iterator.__aiter__(): 
+                    requests.append(request)
+
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)
@@ -335,8 +343,8 @@ class TestManager:
         if self.init_once:
             return self.api
         target = None
-        if self.unittest:
-            target = "http://{}".format('127.0.0.1:11009')
+        if self.app_mode == 'athena-insecure':
+            target = "http://{}".format(self.target_address)
         else:
             target = "https://{}".format(self.target_address)
         self.logger.info('Initializing snappi for %s at target %s', self.app_mode, target)

@@ -3,6 +3,7 @@ import pytest
 import sys
 import subprocess
 import time
+from otg_gnmi.common.ixnutils import *
 sys.path.append('.')
 
 
@@ -38,8 +39,11 @@ def gnmi_server():
             "--server-port",
             "50051",
             "--app-mode",
-            "athena",
-            "--unittest",
+            "athena-insecure",
+            "--target-host",
+            "127.0.0.1",
+            "--target-port",
+            "11009",
             "--insecure"
         ],
         stdout=subprocess.PIPE,
@@ -55,26 +59,18 @@ def gnmi_server():
 
 @pytest.fixture(scope='session')
 def snappiserver():
-    """Demonstrates creating a top level Api instance.
+    """Demonstrates creating Mock Snappi Servers.
     """
-    snappiserver = subprocess.Popen(
-        [
-            "python",
-            "-m",
-            "tests.snappiserver",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    # Give the server time to start
-    time.sleep(2) 
-    yield snappiserver
-    # Shut it down at the end of the pytest session
-    snappiserver.terminate()
+    from .snappiserver import SnappiServer
+    snappi_server_obj =  SnappiServer()
+    pytest.snappiserver = snappi_server_obj.start()
+    yield
+    snappi_server_obj.stop()
+    TestManager.Instance().stop_worker_threads()
 
 @pytest.fixture(scope="session")
 def session():    
-    from tests.session import Session
+    from tests.unit_gnmi_clinet.session import Session
     session = Session()
     session.options.waitForResponses = 3
     return session

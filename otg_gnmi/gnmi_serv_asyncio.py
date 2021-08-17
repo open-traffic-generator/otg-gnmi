@@ -10,7 +10,6 @@ from .common.client_session import *
 class ServerOptions(object):
   def __init__(self, args):
     self.app_mode = args.app_mode
-    self.unittest = args.unittest
     self.logfile = args.logfile
     self.target_address = "{}:{}".format(args.target_host, args.target_port)
     
@@ -84,7 +83,6 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     Reference: gNMI Specification Section 3.5
     """
 
-      
     self.logger.info('Received subscription request. Metadata: %s', context.invocation_metadata())
     self.logger.info('Received subscription request. Peer %s, Peer Identities %s', context.peer(), context.peer_identities())
     

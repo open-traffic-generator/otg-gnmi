@@ -16,7 +16,7 @@
     "submode" : 2,
     "mode" : 0,
     "encoding" : 0,
-    "paths" : ["/port_metrics[name=P1]", "/port_metrics[name=P2]"],
+    "paths" : ["/port_metrics[name=P1]", "/port_metrics[name=P2]", "/flow_metrics[name=F1]"],
     "prefix" : "",
     "qos" : "",
     "use_alias" : true,
