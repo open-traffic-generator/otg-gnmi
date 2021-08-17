@@ -14,6 +14,10 @@ server.crt
 server.key
 tests/results.xml
 
-# otg_gnmi/proto
-# otg_gnmi/autogen/otg_*.py
-# tests/mockstatus.txt
+**/*,cover
+otg_gnmi/proto
+otg_gnmi/autogen/otg_*.py
+otg_gnmi/autogen/gnmi_*.py
+tests/mockstatus.txt
+
+*.html
