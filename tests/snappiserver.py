@@ -5,9 +5,9 @@ import time
 import snappi
 import logging
 import requests
-from tests.utils.settings import *
-from otg_gnmi.common.utils import *
-from tests.utils.common import *
+from tests.utils.settings import GnmiTestConfig
+from otg_gnmi.common.utils import init_logging
+from tests.utils.common import get_mockserver_status
 
 app = Flask(__name__)
 CONFIG = GnmiTestConfig()
@@ -23,6 +23,7 @@ def get_status():
         response=json.dumps({'status': 'up'}),
         headers={'Content-Type': 'application/json'})
 
+
 @app.route('/config', methods=['POST'])
 def set_config():
     global CONFIG
@@ -34,7 +35,7 @@ def set_config():
                         response=json.dumps({'detail': 'invalid data type'}),
                         headers={'Content-Type': 'application/json'})
     else:
-        status = utils.get_mockserver_status()
+        status = get_mockserver_status()
         if status == "200":
             CONFIG = config
             return Response(status=200,
@@ -143,14 +144,14 @@ class SnappiServer(object):
         self._CONFIG = None
 
     def start(self):
-        self._web_server_thread = multiprocessing.Process(target=web_server, args=())
+        self._web_server_thread = multiprocessing.Process(
+            target=web_server, args=())
         self._web_server_thread.start()
         self._wait_until_ready()
         return self
 
     def stop(self):
         self._web_server_thread.terminate()
-
 
     def _wait_until_ready(self):
         while True:

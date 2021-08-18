@@ -1,16 +1,15 @@
 import json
 import os
 import sys
-import time
-import logging
-from datetime import datetime
 
 if sys.version_info[0] >= 3:
     # alias str as unicode for python3 and above
     unicode = str
 
+
 def get_root_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def dict_items(d):
     try:
@@ -24,6 +23,7 @@ def dict_items(d):
 def object_dict_items(ob):
     return dict_items(ob.__dict__)
 
+
 def byteify(val):
     if isinstance(val, dict):
         return {byteify(key): byteify(value) for key, value in dict_items(val)}
@@ -35,6 +35,7 @@ def byteify(val):
     else:
         return val
 
+
 def load_dict_from_json_file(path):
     """
     Safely load dictionary from JSON file in both python2 and python3
@@ -42,20 +43,22 @@ def load_dict_from_json_file(path):
     with open(path, 'r') as fp:
         return json.load(fp, object_hook=byteify)
 
+
 # path to gnmi_settings.json and gnmi_test_settings.json relative root dir
 GNMI_SETTINGS_FILE = 'gnmi_settings.json'
 GNMI_TEST_CONFIG_FILE = 'gnmi_test_config.json'
 
+
 class BaseSettings(object):
     def __init__(self, settings_file):
         self.setings_file = settings_file
-    
+
     def load_from_settings_file(self):
         self.__dict__ = load_dict_from_json_file(self.get_settings_path())
-        
+
     def get_settings_path(self):
         return os.path.join(get_root_dir(), self.setings_file)
-    
+
     def load_from_pytest_command_line(self, config):
         for key, val in object_dict_items(self):
             new_val = config.getoption(key)
@@ -70,13 +73,14 @@ class BaseSettings(object):
     def register_pytest_command_line_options(self, parser):
         for key, val in object_dict_items(self):
             parser.addoption("--%s" % key, action="store", default=None)
-    
+
     def to_string(self):
         return self.__dict__
-    
+
     def serialize(self):
-        print ('Serialize: %s' % json.dumps(self.__dict__))
+        print('Serialize: %s' % json.dumps(self.__dict__))
         return json.dumps(self.__dict__)
+
 
 class GnmiSettings(BaseSettings):
     """
@@ -109,12 +113,16 @@ class GnmiSettings(BaseSettings):
         self.waitForResponses = None
         self.load_from_settings_file()
         self.authentication = [self.username, self.password]
-        self.metadata = [('username',self.username), ('password', self.password)]
-        
+        self.metadata = [
+            ('username', self.username),
+            ('password', self.password)
+        ]
+
     def is_done(self, curr_upds):
         if self.waitForResponses != 0 and self.waitForResponses <= curr_upds:
             return True
         return False
+
 
 class GnmiTestConfig(BaseSettings):
     """
@@ -132,7 +140,6 @@ if __name__ == '__main__':
     # shared global settings
     gnmiSettings = GnmiSettings()
     print(gnmiSettings.__dict__)
-    
 
     gnmiTestConfig = GnmiTestConfig()
     print(gnmiTestConfig.__dict__)

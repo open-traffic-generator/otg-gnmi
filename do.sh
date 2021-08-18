@@ -2,8 +2,7 @@
 
 OTG_API_VERSION=0.4.10
 OPENCONFIG_GNMI_COMMIT=741cdaba27df2decde561afef843f16d0631373f
-UT_API_REPORT=ut-api-report.html
-UT_GNMI_CLIENT_REPORT=ut-gnmi-client-report.html
+UT_REPORT=ut-report.html
 
 # Avoid warnings for non-interactive apt-get install
 export DEBIAN_FRONTEND=noninteractive
@@ -20,7 +19,7 @@ install_deps() {
 install_ext_deps() {
     echo "Installing extra dependencies required by this project"
     apt-get -y install curl vim git \
-    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio asyncio mock \
+    && python -m pip install --default-timeout=100 flake8 requests pytest pytest-cov pytest_dependency pytest-html pytest-grpc pytest-asyncio asyncio mock coverage \
     && apt-get -y clean all
 }
 
@@ -73,12 +72,8 @@ run() {
 
 run_unit_test() {
     echo "Running all unit tests ..."
-
-    echo "Running unit gnmi client cases ......."
-    python -m pytest --html=${UT_GNMI_CLIENT_REPORT} --self-contained-html ./tests/unit_gnmi_clinet/
-
-    echo "Running unit api cases ......."
-    python -m pytest --html=${UT_API_REPORT} --self-contained-html ./tests/unit_api/ -p no:cacheprovider --cov=./otg_gnmi/
+    coverage run --source=./otg_gnmi -m pytest --html=${UT_REPORT} --self-contained-html ./tests/ 
+    coverage report -m
     rm -rf ./otg_gnmi/__pycache__
     rm -rf ./tests/__pycache__
     rm -rf ./tests/.pytest_cache
@@ -88,8 +83,9 @@ run_unit_test() {
     rm .coverage
 }
 
-analyze_test_result() {
-    ut_report=${1}
+analyze_ut_result() {
+    echo "Analyzing UT results..."
+    ut_report=${UT_REPORT}
     total=$(cat ${ut_report} | grep -o -P '(?<=(<p>)).*(?=( tests))')
     echo "Number of Total Unit Tests: ${total}"
     passed=$(cat ${ut_report} | grep -o -P '(?<=(<span class="passed">)).*(?=( passed</span>))')
@@ -102,14 +98,6 @@ analyze_test_result() {
         exit 1
     fi
     rm -rf ./${ut_report} 2>&1 || true
-}
-
-analyze_ut_results() {
-    echo "Analyzing UT gnmi client results..."
-    analyze_test_result ${UT_GNMI_CLIENT_REPORT}
-
-    echo "Analyzing UT api results..."
-    analyze_test_result ${UT_API_REPORT}
 }
 
 echo_version() {
@@ -145,7 +133,7 @@ case $1 in
 		run ${@}
 		;;
 	art	    )
-		install_ext_deps && get_proto && gen_py_stubs && run_unit_test && analyze_ut_results
+		install_ext_deps && get_proto && gen_py_stubs && run_unit_test && analyze_ut_result
 		;;
     unit    )
         run_unit_test

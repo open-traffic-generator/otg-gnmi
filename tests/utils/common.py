@@ -1,15 +1,14 @@
-import os
 import argparse
 import json
-import types
+import os
 
-from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
-from tests.utils.settings import *
-from otg_gnmi.autogen import gnmi_pb2, gnmi_pb2_grpc
-import mock
 import grpc
+import mock
 from google.protobuf import json_format
-from otg_gnmi.common.utils import *
+from otg_gnmi.autogen import gnmi_pb2
+from otg_gnmi.common.utils import generate_subscription_request
+from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
+from tests.utils.settings import GnmiSettings
 
 SETTINGS_FILE = 'settings.json'
 TESTS_FOLDER = 'tests'
@@ -26,6 +25,7 @@ def convert_proto_to_json(proto_obj):
     )
 
     return json_obj
+
 
 def get_mockserver_status():
     tests_dir = os.getcwd()
@@ -44,7 +44,7 @@ def get_mockserver_status():
     else:
         status = '200'
         print("Current MockServer Status: {}".format(status))
-        return status.strip() 
+        return status.strip()
 
 
 def get_parsed_args(op_val):
@@ -62,15 +62,19 @@ def get_parsed_args(op_val):
     parser.add_argument('--target-port', help='target port number',
                         default=11009,
                         type=int)
-    parser.add_argument('--logfile', help='logfile name [date and time auto appended]',
+    parser.add_argument('--logfile',
+                        help='logfile name [date and time auto appended]',
                         default='gNMIServer',
-                        type=str)    
-    parser.add_argument('--insecure', help='disable TSL security, by defualt enabled',
+                        type=str)
+    parser.add_argument('--insecure',
+                        help='disable TSL security, by defualt enabled',
                         action='store_true')
-    parser.add_argument('--server-key', help='path to private key, default is server.key',
+    parser.add_argument('--server-key',
+                        help='path to private key, default is server.key',
                         default='server.key',
                         type=str)
-    parser.add_argument('--server-crt', help='path to certificate key, default is server.crt',
+    parser.add_argument('--server-crt',
+                        help='path to certificate key, default is server.crt',
                         default='server.crt',
                         type=str)
 
@@ -85,6 +89,7 @@ def get_parsed_args(op_val):
 
     args = parser.parse_args(arg_inputs)
     return args
+
 
 def change_mockserver_status(error_code=200, with_warning=False):
     status = str(error_code)
@@ -134,12 +139,15 @@ def init_gnmi_with_mock_server(error_code=200,
     gnmi_api = AsyncGnmiService(mock_config_args)
     return gnmi_api
 
+
 async def set(api):
     print('Set gNMI Request......')
-    path = gnmi_pb2.Path(elem=[                
-				gnmi_pb2.PathElem(name='val', key={'name': 'setup_test'})
-			])
-    update = gnmi_pb2.Update(path=path, val=gnmi_pb2.TypedValue(json_val=json.dumps({'name': 'setup_test'}).encode("utf-8")))
+    path = gnmi_pb2.Path(elem=[
+        gnmi_pb2.PathElem(name='val', key={'name': 'setup_test'})
+        ])
+    update = gnmi_pb2.Update(
+        path=path, val=gnmi_pb2.TypedValue(
+            json_val=json.dumps({'name': 'setup_test'}).encode("utf-8")))
     updates = []
     updates.append(update)
     request = gnmi_pb2.SetRequest(update=updates)
@@ -180,5 +188,5 @@ async def subscribe(api):
         count += 1
         response_list.append(response)
         if count == 3:
-            break  
+            break
     return response_list
