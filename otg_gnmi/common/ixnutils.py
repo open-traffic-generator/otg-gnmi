@@ -358,7 +358,7 @@ class TestManager:
         if self.init_once:
             return self.api
         target = None
-        if self.app_mode == 'athena-insecure':
+        if self.app_mode == 'ixia-c-insecure':
             target = "http://{}".format(self.target_address)
         else:
             target = "https://{}".format(self.target_address)

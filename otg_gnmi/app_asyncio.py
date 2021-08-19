@@ -30,7 +30,7 @@ class AsyncServer:
         reflection.enable_server_reflection(SERVICE_NAMES, server)
 
         server_address = "[::]:{}".format(args.server_port)
-        app_name = "Athena"
+        app_name = "Ixia-c"
         if args.app_mode == 'ixnetwork':
             app_name = 'IxNetwork'
         if args.insecure is True:

@@ -17,7 +17,7 @@ def gnmi_server():
             "--server-port",
             "50051",
             "--app-mode",
-            "athena-insecure",
+            "ixia-c-insecure",
             "--target-host",
             "127.0.0.1",
             "--target-port",
