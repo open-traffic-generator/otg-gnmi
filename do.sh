@@ -102,15 +102,15 @@ analyze_ut_result() {
 
 echo_version() {
     version=$(head ./version | cut -d' ' -f1)
-    echo "gRPC version : ${version}"
+    echo "gNMI version : ${version}"
 }
 
 build() {
-    docker rmi -f "otg-grpc-server"> /dev/null 2>&1 || true
+    docker rmi -f "otg-gnmi-server"> /dev/null 2>&1 || true
     echo "Building production docker image..."
-    docker build -t otg-grpc-server .
+    docker build -t otg-gnmi-server .
     version=$(head ./version | cut -d' ' -f1)
-    echo "gRPC - Server version : ${version}"
+    echo "gNMI - Server version : ${version}"
 }
 
 clean() {
