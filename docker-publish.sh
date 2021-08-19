@@ -30,26 +30,28 @@ publish() {
 
     if [ ${EXPERIMENT} = true ]
     then 
-        DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/experiments-gnmi:${TAG}"
+        echo "EXPERMINET TRUE"
+        # DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/experiments-gnmi:${TAG}"
     else
-        DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/otg-gnmi-server:${TAG}"
-        dockerhub_image_exists "${DOCKERHUB_IMAGE}"
+        echo "EXPERMINET FALSE"
+        # DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/otg-gnmi-server:${TAG}"
+        # dockerhub_image_exists "${DOCKERHUB_IMAGE}"
     fi
 
-    echo "Publishing image to DockerHub..."
-    docker tag otg-gnmi-server "${DOCKERHUB_IMAGE}"
+    # echo "Publishing image to DockerHub..."
+    # docker tag otg-gnmi-server "${DOCKERHUB_IMAGE}"
 
-    docker login -p ${DOCKER_HUB_ACCESS_TOKEN} -u ${DOCKER_HUB_USERNAME} \
-    && docker push "${DOCKERHUB_IMAGE}" \
-    && docker logout ${DOCKER_HUB_USERNAME}
-    echo "${DOCKERHUB_IMAGE} published in DockerHub..."
+    # docker login -p ${DOCKER_HUB_ACCESS_TOKEN} -u ${DOCKER_HUB_USERNAME} \
+    # && docker push "${DOCKERHUB_IMAGE}" \
+    # && docker logout ${DOCKER_HUB_USERNAME}
+    # echo "${DOCKERHUB_IMAGE} published in DockerHub..."
 
 
-    echo "Deleting local docker images..."
-    docker rmi -f "otg-gnmi-server" "${DOCKERHUB_IMAGE}"> /dev/null 2>&1 || true
+    # echo "Deleting local docker images..."
+    # docker rmi -f "otg-gnmi-server" "${DOCKERHUB_IMAGE}"> /dev/null 2>&1 || true
 
-    echo "Verifying image from DockerHub..."
-    verify_dockerhub_images "${DOCKERHUB_IMAGE}"
+    # echo "Verifying image from DockerHub..."
+    # verify_dockerhub_images "${DOCKERHUB_IMAGE}"
 }
 
 verify_dockerhub_images() {
