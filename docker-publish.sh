@@ -30,10 +30,10 @@ publish() {
 
     if [ ${EXPERIMENT} = true ]
     then 
-        echo "EXPERMINET TRUE"
+        echo "secret - EXPERMINET TRUE"
         # DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/experiments-gnmi:${TAG}"
     else
-        echo "EXPERMINET FALSE"
+        echo "secret - EXPERMINET FALSE"
         # DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/otg-gnmi-server:${TAG}"
         # dockerhub_image_exists "${DOCKERHUB_IMAGE}"
     fi
