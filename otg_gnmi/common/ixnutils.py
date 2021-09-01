@@ -365,17 +365,17 @@ class TestManager:
         res = api.get_metrics(req)
         return res.port_metrics
     
-    def get_bgpv6_metric(self, device_names, stat_names=None):
+    def get_bgpv6_metric(self, peer_names, stat_names=None):
         api = self.get_api()        
         req = api.metrics_request()
-        req.bgpv6.device_names = device_names
+        req.bgpv6.peer_names = peer_names
         res = api.get_metrics(req)
         return res.bgpv6_metrics
 
-    def get_bgpv4_metric(self, device_names, stat_names=None):
+    def get_bgpv4_metric(self, peer_names, stat_names=None):
         api = self.get_api()        
         req = api.metrics_request()
-        req.bgpv4.device_names = device_names
+        req.bgpv4.peer_names = peer_names
         res = api.get_metrics(req)
         return res.bgpv4_metrics
     
