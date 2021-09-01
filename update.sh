@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OTG_VERSION=0.4.12
+OTG_VERSION=0.5.3
 mkdir tmp
 cd tmp
 
