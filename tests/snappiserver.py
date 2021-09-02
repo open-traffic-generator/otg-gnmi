@@ -99,16 +99,16 @@ def get_metrics():
         metrics_request.deserialize(request.data.decode('utf-8'))
         metrics_response = api.metrics_response()
         if metrics_request.choice == 'port':
-            for port in CONFIG.ports:
+            for metric in CONFIG.port_metrics:
                 metrics_response.port_metrics.metric(
-                    name=port['name'],
+                    name=metric['name'],
                     frames_tx=10000,
                     frames_rx=10000
                 )
         elif metrics_request.choice == 'flow':
-            for flow in CONFIG.flows:
+            for metric in CONFIG.flow_metrics:
                 metrics_response.flow_metrics.metric(
-                    name=flow['name'],
+                    name=metric['name'],
                     port_tx="P1",
                     port_rx="P2",
                     frames_tx=10000,
@@ -123,7 +123,8 @@ def get_metrics():
                     session_flap_count=0,
                     routes_advertised=1000,
                     routes_received=500
-            )
+                )
+
         elif metrics_request.choice == 'bgpv6':
             for metric in CONFIG.bgpv6_metrics:
                 metrics_response.bgpv6_metrics.metric(

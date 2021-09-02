@@ -17,11 +17,8 @@ def gnmi_server():
             "--server-port",
             "50051",
             "--app-mode",
-            "ixia-c-insecure",
-            "--target-host",
-            "127.0.0.1",
-            "--target-port",
-            "11009",
+            "athena",
+            "--unittest",
             "--insecure"
         ],
         stdout=subprocess.PIPE,
@@ -53,4 +50,4 @@ def session():
     from tests.session import Session
     session = Session()
     session.options.waitForResponses = 3
-    yield session
+    return session

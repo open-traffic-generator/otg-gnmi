@@ -1,12 +1,11 @@
 import argparse
 import json
 import os
-
+from tests.utils.client_utils import generate_subscription_request
 import grpc
 import mock
 from google.protobuf import json_format
 from otg_gnmi.autogen import gnmi_pb2
-from tests.session import Session
 from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
 from tests.utils.settings import GnmiSettings
 
@@ -53,7 +52,7 @@ def get_parsed_args(op_val):
                         default=50051,
                         type=int)
     parser.add_argument('--app-mode', help='target Application mode)',
-                        choices=['ixnetwork', 'ixia-c', 'ixia-c-insecure'],
+                        choices=['ixnetwork', 'athena'],
                         default='ixnetwork',
                         type=str)
     parser.add_argument('--target-host', help='target host address',
@@ -62,6 +61,8 @@ def get_parsed_args(op_val):
     parser.add_argument('--target-port', help='target port number',
                         default=11009,
                         type=int)
+    parser.add_argument('--unittest', help='set to true if running unit test',
+                        action='store_true')
     parser.add_argument('--logfile',
                         help='logfile name [date and time auto appended]',
                         default='gNMIServer',
@@ -177,8 +178,7 @@ async def capabilities(api):
 
 async def subscribe(api):
     print('subscribe gNMI Request......')
-    session_obj = Session()
-    request_iterator = session_obj.generate_subscription_request(['port_metrics', 'flow_metrics'])
+    request_iterator = generate_subscription_request(OPTIONS)
     mock_context = mock.create_autospec(spec=grpc.aio.ServicerContext)
     mock_context.metadata = OPTIONS.metadata
     responses = api.Subscribe(request_iterator, mock_context)

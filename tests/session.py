@@ -1,12 +1,10 @@
-import re
-import sys
-import os
 import logging
 import time
 import grpc
 from otg_gnmi.autogen import gnmi_pb2, gnmi_pb2_grpc
-from tests.utils.settings import *
-from otg_gnmi.common.utils import *
+from tests.utils.settings import GnmiSettings
+from otg_gnmi.common.utils import init_logging, path_from_string, is_none_or_empty # noqa
+import json
 
 '''
 python3 -m tests.session --submode 1 --encoding 2 "/port_metrics[name=P1]" "/flow_metrics[name=F1]" "/bgpv4_metrics[name=BGP Peer 1]" "/flow_metrics[name=F2]"
@@ -15,7 +13,7 @@ python3 -m tests.session --server 10.72.47.36:50051 --submode 1 --encoding 2 "/p
 '--submode' --> [TARGET_DEFINED, ON_CHANGE, SAMPLE]
 '--mode' --> [STREAM, ONCE, POLL]
 '--encoding' --> [JSON, BYTES, PROTO, ASCII, JSON_IETF]
-'''
+''' # noqa
 
 
 class Session(object):
@@ -33,7 +31,7 @@ class Session(object):
         return options
 
     def is_secure(self):
-        if self.options.secure == True and len(self.options.cert) == 0:
+        if self.options.secure is True and len(self.options.cert) == 0:
             return False
         return True
 
@@ -75,7 +73,7 @@ class Session(object):
             responses = self.stub.Capabilities(
                 request, metadata=self.options.metadata)
             self.logger.info('CapabilityRequest Response: %s', responses)
-            if responses != None:
+            if responses is not None:
                 result = True
 
         except KeyboardInterrupt:
@@ -87,7 +85,7 @@ class Session(object):
             result = False
 
         except Exception as err:
-            self.logger.error("Excepion: s", err)
+            self.logger.error("Exception: s", err)
             result = False
 
         return result
@@ -100,7 +98,7 @@ class Session(object):
             request = gnmi_pb2.GetRequest()
             responses = self.stub.Get(request, metadata=self.options.metadata)
             self.logger.info('GetRequest Response: %s', responses)
-            if responses != None:
+            if responses is not None:
                 result = True
 
         except KeyboardInterrupt:
@@ -112,7 +110,7 @@ class Session(object):
             result = False
 
         except Exception as err:
-            self.logger.error("Excepion: s", err)
+            self.logger.error("Exception: s", err)
             result = False
 
         return result
@@ -132,7 +130,7 @@ class Session(object):
             request = gnmi_pb2.SetRequest(update=updates)
             responses = self.stub.Get(request, metadata=self.options.metadata)
             self.logger.info('SetRequest Response: %s', responses)
-            if responses != None:
+            if responses is not None:
                 result = True
 
         except KeyboardInterrupt:
@@ -144,7 +142,7 @@ class Session(object):
             result = False
 
         except Exception as err:
-            self.logger.error("Excepion: s", err)
+            self.logger.error("Exception: s", err)
             result = False
 
         return result
@@ -168,9 +166,11 @@ class Session(object):
         for path in paths:
             mypath = path_from_string(path)
             self.logger.info('Sending SubscribeRequest: %s: %s', path, mypath)
-            mysub = gnmi_pb2.Subscription(path=mypath, mode=self.options.submode,
-                                          suppress_redundant=self.options.suppress, sample_interval=self.options.interval*1000000000,
-                                          heartbeat_interval=self.options.heartbeat)
+            mysub = gnmi_pb2.Subscription(
+                path=mypath, mode=self.options.submode,
+                suppress_redundant=self.options.suppress,
+                sample_interval=self.options.interval*1000000000,
+                heartbeat_interval=self.options.heartbeat)
             mysubs.append(mysub)
 
         if is_none_or_empty(self.options.prefix):
@@ -183,12 +183,19 @@ class Session(object):
         else:
             myqos = gnmi_pb2.QOSMarking(marking=self.options.qos)
 
-        mysblist = gnmi_pb2.SubscriptionList(prefix=myprefix, mode=self.options.mode,
-                                             allow_aggregation=self.options.aggregate, encoding=self.options.encoding,
-                                             subscription=mysubs, use_aliases=self.options.use_alias, qos=myqos)
+        mysblist = gnmi_pb2.SubscriptionList(
+            prefix=myprefix,
+            mode=self.options.mode,
+            allow_aggregation=self.options.aggregate,
+            encoding=self.options.encoding,
+            subscription=mysubs,
+            use_aliases=self.options.use_alias,
+            qos=myqos)
         mysubreq = gnmi_pb2.SubscribeRequest(subscribe=mysblist)
         self.logger.info('Create SubscribeRequest: %s - End',
                          subscription_types)
+
+        print(mysubreq)
 
         yield mysubreq
 
@@ -203,7 +210,6 @@ class Session(object):
         resp_cnt = 0
         try:
             self.logger.info('Sending SubscribeRequest: %s', req_iterator)
-            # responses = self.stub.Subscribe(req_iterator, self.options.timeout, metadata=self.options.metadata)
             responses = self.stub.Subscribe(
                 req_iterator, None, metadata=self.options.metadata)
             res_idx = 0
@@ -214,15 +220,21 @@ class Session(object):
 
                 if response.HasField('error'):
                     self.logger.error('gNMI Error Code %s, Error Message: %s',
-                                      str(response.error.code), str(response.error.message))
+                                      str(response.error.code),
+                                      str(response.error.message))
 
                 elif response.HasField('sync_response'):
                     self.logger.info('Sync Response received\n'+str(response))
                     secs += time.time() - start
                     start = 0
                     if self.options.stats:
-                        self.logger.info("Total Messages: %d [Rate: %5.0f], Total Updates: %d [Rate: %5.0f], Total Time: %1.2f secs",
-                                         resp_cnt, resp_cnt/secs, upd_cnt, upd_cnt/secs, secs)
+                        self.logger.info(
+                            "Total Messages: %d [Rate: %5.0f], Total Updates: %d [Rate: %5.0f], Total Time: %1.2f secs", # noqa
+                            resp_cnt,
+                            resp_cnt/secs,
+                            upd_cnt,
+                            upd_cnt/secs,
+                            secs)
 
                 elif response.HasField('update'):
                     if start == 0:

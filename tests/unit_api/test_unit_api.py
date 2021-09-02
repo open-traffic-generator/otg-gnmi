@@ -73,12 +73,41 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
     ]
 
     expected_stats = [
-        {'name': 'P1', 'frames_tx': 10000, 'frames_rx': 10000},
-        {'name': 'P2', 'frames_tx': 10000, 'frames_rx': 10000},
-        {'name': 'F1', 'frames_tx': 10000, 'frames_rx': 10000}
+        {
+            'name': 'P1',
+            'frames_tx': 10000,
+            'frames_rx': 10000
+        },
+        {
+            'name': 'P2',
+            'frames_tx': 10000,
+            'frames_rx': 10000
+        },
+        {
+            'name': 'F1',
+            'port_tx': "P1",
+            'port_rx': "P2",
+            'frames_tx': 10000,
+            'frames_rx': 10000
+        },
+        {
+            'name': 'BGPv4-1',
+            'session_state': "down",
+            'session_flap_count': 0,
+            'routes_advertised': 1000,
+            'routes_received': 500
+        },
+        {
+            'name': 'BGPv6-1',
+            'session_state': "up",
+            'session_flap_count': 0,
+            'routes_advertised': 1000,
+            'routes_received': 500
+        }
     ]
 
     res_1 = responses[0]
+    print(res_1)
     assert res_1.HasField('update')
     assert res_1.update.update[0].path.elem[0].key['name'] in expected_names
     stat_1 = json.loads(res_1.update.update[0].val.json_val.decode('utf-8'))
@@ -106,7 +135,9 @@ async def test_gnmi_server_subscribe_api_400(snappiserver,
     expected_error_msg = [
         "P1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
         "P2: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
-        "F1: (400, {\'errors\': [\'mock 400 get_metrics error\']})"
+        "F1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
+        "BGPv4-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
+        "BGPv6-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})"
     ]
 
     for res in responses:
@@ -123,7 +154,9 @@ async def test_gnmi_server_subscribe_api_500(snappiserver,
     expected_error_msg = [
         "P1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
         "P2: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
-        "F1: (500, {\'errors\': [\'mock 500 get_metrics error\']})"
+        "F1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
+        "BGPv4-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
+        "BGPv6-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})"
     ]
 
     for res in responses:
@@ -140,7 +173,9 @@ async def test_gnmi_server_subscribe_api_501(snappiserver,
     expected_error_msg = [
         "P1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
         "P2: (501, {\'errors\': [\'get_metrics is not implemented\']})",
-        "F1: (501, {\'errors\': [\'get_metrics is not implemented\']})"
+        "F1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
+        "BGPv4-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
+        "BGPv6-1: (501, {\'errors\': [\'get_metrics is not implemented\']})"
     ]
 
     for res in responses:
