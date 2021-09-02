@@ -6,7 +6,7 @@ import grpc
 import mock
 from google.protobuf import json_format
 from otg_gnmi.autogen import gnmi_pb2
-from otg_gnmi.common.utils import generate_subscription_request
+from tests.session import Session
 from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
 from tests.utils.settings import GnmiSettings
 
@@ -177,8 +177,8 @@ async def capabilities(api):
 
 async def subscribe(api):
     print('subscribe gNMI Request......')
-
-    request_iterator = generate_subscription_request(OPTIONS)
+    session_obj = Session()
+    request_iterator = session_obj.generate_subscription_request(['port_metrics', 'flow_metrics'])
     mock_context = mock.create_autospec(spec=grpc.aio.ServicerContext)
     mock_context.metadata = OPTIONS.metadata
     responses = api.Subscribe(request_iterator, mock_context)

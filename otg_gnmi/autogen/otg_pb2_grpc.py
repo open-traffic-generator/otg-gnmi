@@ -20,6 +20,11 @@ class OpenapiStub(object):
                 request_serializer=otg__pb2.SetConfigRequest.SerializeToString,
                 response_deserializer=otg__pb2.SetConfigResponse.FromString,
                 )
+        self.UpdateConfig = channel.unary_unary(
+                '/otg.Openapi/UpdateConfig',
+                request_serializer=otg__pb2.UpdateConfigRequest.SerializeToString,
+                response_deserializer=otg__pb2.UpdateConfigResponse.FromString,
+                )
         self.GetConfig = channel.unary_unary(
                 '/otg.Openapi/GetConfig',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
@@ -40,11 +45,6 @@ class OpenapiStub(object):
                 request_serializer=otg__pb2.SetCaptureStateRequest.SerializeToString,
                 response_deserializer=otg__pb2.SetCaptureStateResponse.FromString,
                 )
-        self.UpdateFlows = channel.unary_unary(
-                '/otg.Openapi/UpdateFlows',
-                request_serializer=otg__pb2.UpdateFlowsRequest.SerializeToString,
-                response_deserializer=otg__pb2.UpdateFlowsResponse.FromString,
-                )
         self.SetRouteState = channel.unary_unary(
                 '/otg.Openapi/SetRouteState',
                 request_serializer=otg__pb2.SetRouteStateRequest.SerializeToString,
@@ -60,7 +60,7 @@ class OpenapiStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=otg__pb2.GetStateMetricsResponse.FromString,
                 )
-        self.GetCapture = channel.unary_unary(
+        self.GetCapture = channel.unary_stream(
                 '/otg.Openapi/GetCapture',
                 request_serializer=otg__pb2.GetCaptureRequest.SerializeToString,
                 response_deserializer=otg__pb2.GetCaptureResponse.FromString,
@@ -71,6 +71,12 @@ class OpenapiServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SetConfig(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateConfig(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -95,12 +101,6 @@ class OpenapiServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SetCaptureState(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateFlows(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -138,6 +138,11 @@ def add_OpenapiServicer_to_server(servicer, server):
                     request_deserializer=otg__pb2.SetConfigRequest.FromString,
                     response_serializer=otg__pb2.SetConfigResponse.SerializeToString,
             ),
+            'UpdateConfig': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateConfig,
+                    request_deserializer=otg__pb2.UpdateConfigRequest.FromString,
+                    response_serializer=otg__pb2.UpdateConfigResponse.SerializeToString,
+            ),
             'GetConfig': grpc.unary_unary_rpc_method_handler(
                     servicer.GetConfig,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
@@ -158,11 +163,6 @@ def add_OpenapiServicer_to_server(servicer, server):
                     request_deserializer=otg__pb2.SetCaptureStateRequest.FromString,
                     response_serializer=otg__pb2.SetCaptureStateResponse.SerializeToString,
             ),
-            'UpdateFlows': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateFlows,
-                    request_deserializer=otg__pb2.UpdateFlowsRequest.FromString,
-                    response_serializer=otg__pb2.UpdateFlowsResponse.SerializeToString,
-            ),
             'SetRouteState': grpc.unary_unary_rpc_method_handler(
                     servicer.SetRouteState,
                     request_deserializer=otg__pb2.SetRouteStateRequest.FromString,
@@ -178,7 +178,7 @@ def add_OpenapiServicer_to_server(servicer, server):
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=otg__pb2.GetStateMetricsResponse.SerializeToString,
             ),
-            'GetCapture': grpc.unary_unary_rpc_method_handler(
+            'GetCapture': grpc.unary_stream_rpc_method_handler(
                     servicer.GetCapture,
                     request_deserializer=otg__pb2.GetCaptureRequest.FromString,
                     response_serializer=otg__pb2.GetCaptureResponse.SerializeToString,
@@ -207,6 +207,23 @@ class Openapi(object):
         return grpc.experimental.unary_unary(request, target, '/otg.Openapi/SetConfig',
             otg__pb2.SetConfigRequest.SerializeToString,
             otg__pb2.SetConfigResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateConfig(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/UpdateConfig',
+            otg__pb2.UpdateConfigRequest.SerializeToString,
+            otg__pb2.UpdateConfigResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -279,23 +296,6 @@ class Openapi(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateFlows(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/UpdateFlows',
-            otg__pb2.UpdateFlowsRequest.SerializeToString,
-            otg__pb2.UpdateFlowsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def SetRouteState(request,
             target,
             options=(),
@@ -357,7 +357,7 @@ class Openapi(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/otg.Openapi/GetCapture',
+        return grpc.experimental.unary_stream(request, target, '/otg.Openapi/GetCapture',
             otg__pb2.GetCaptureRequest.SerializeToString,
             otg__pb2.GetCaptureResponse.FromString,
             options, channel_credentials,

@@ -144,7 +144,6 @@ class TestManager:
         try:
             if self.init_once == False:
                 self.app_mode = options.app_mode
-                self.unittest = options.unittest
                 self.target_address = options.target_address
                 self.logger = logging.getLogger(options.logfile)
 
@@ -329,7 +328,7 @@ class TestManager:
         if self.init_once:
             return self.api
         target = None
-        if self.unittest:
+        if self.app_mode == 'athena-insecure':
             target = "http://{}".format('127.0.0.1:11009')
         else:
             target = "https://{}".format(self.target_address)

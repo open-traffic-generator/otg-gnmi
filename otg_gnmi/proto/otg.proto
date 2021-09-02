@@ -1,5 +1,5 @@
-// Open Traffic Generator API 0.5.3
-// License: MIT
+// Open Traffic Generator API 0.4.12
+// License: https://opensource.org/licenses/MIT
 
 syntax = "proto3";
 
@@ -12,7 +12,7 @@ message OpenApiMsgOpt {
   string description = 10;
 }
 extend google.protobuf.MessageOptions {
-  optional OpenApiMsgOpt msg_meta = 60001;
+  optional OpenApiMsgOpt msg_meta = 50001;
 }
 
 message OpenApiFldOpt {
@@ -20,21 +20,21 @@ message OpenApiFldOpt {
   string description = 20;
 }
 extend google.protobuf.FieldOptions {
-  optional OpenApiFldOpt fld_meta = 60002;
+  optional OpenApiFldOpt fld_meta = 50002;
 }
 
 message OpenApiSvcOpt {
   string description = 10;
 }
 extend google.protobuf.ServiceOptions {
-  optional OpenApiSvcOpt svc_meta = 60003;
+  optional OpenApiSvcOpt svc_meta = 50003;
 }
 
 message OpenApiRpcOpt {
   string description = 10;
 }
 extend google.protobuf.MethodOptions {
-  optional OpenApiRpcOpt rpc_meta = 60004;
+  optional OpenApiRpcOpt rpc_meta = 50004;
 }
 
 message Config {
@@ -2727,7 +2727,7 @@ message FlowRate {
     (fld_meta).description = "Gigabits per second."
   ];
 
-  optional float percentage = 7 [
+  optional double percentage = 7 [
     (fld_meta).default = "100",
     (fld_meta).description = "The percentage of a port location's available bandwidth."
   ];
@@ -2796,17 +2796,17 @@ message FlowDelay {
     (fld_meta).description = "Description missing in models"
   ];
 
-  optional float bytes = 2 [
+  optional double bytes = 2 [
     (fld_meta).default = "0",
     (fld_meta).description = "The delay before starting transmission of packets.\nA value of 0 indicates no delay."
   ];
 
-  optional float nanoseconds = 3 [
+  optional double nanoseconds = 3 [
     (fld_meta).default = "0",
     (fld_meta).description = "The delay before starting transmission of packets.\nA value of 0 indicates no delay."
   ];
 
-  optional float microseconds = 4 [
+  optional double microseconds = 4 [
     (fld_meta).default = "0",
     (fld_meta).description = "The delay before starting transmission of packets.\nA value of 0 indicates no delay."
   ];
@@ -2833,7 +2833,7 @@ message FlowFixedPackets {
 message FlowFixedSeconds {
   option (msg_meta).description = "Transmit for a fixed number of seconds after which the flow will stop.";
 
-  optional float seconds = 1 [
+  optional double seconds = 1 [
     (fld_meta).default = "1",
     (fld_meta).description = "Stop transmit of the flow after this number of seconds."
   ];
@@ -2975,7 +2975,7 @@ message EventRxRateThreshold {
     (fld_meta).description = "True to enable the rx_rate_threshold event. \nEnabling this option may affect the resultant packet payload due to \nadditional instrumentation data."
   ];
 
-  optional float threshold = 2 [
+  optional double threshold = 2 [
     (fld_meta).default = "95",
     (fld_meta).description = "True to enable notifications when the rx rate of a flow passes above \nor below the threshold value. "
   ];
@@ -3106,25 +3106,6 @@ message CaptureState {
   }
   State.Enum state = 2 [
     (fld_meta).description = "The capture state."
-  ];
-}
-
-message FlowsUpdate {
-  option (msg_meta).description = "A container of flows with associated properties to be updated without affecting the transmit state";
-
-  message PropertyNames {
-    enum Enum {
-      unspecified = 0;
-      rate = 1;
-      size = 2;
-    }
-  }
-  repeated PropertyNames.Enum property_names = 1 [
-    (fld_meta).description = "Flow properties to be updated without affecting the transmit state"
-  ];
-
-  repeated Flow flows = 2 [
-    (fld_meta).description = "The list of configured flows for which given property will be updated."
   ];
 }
 
@@ -3293,19 +3274,19 @@ message PortMetric {
     (fld_meta).description = "The current total number of valid bytes received"
   ];
 
-  optional float frames_tx_rate = 9 [
+  optional double frames_tx_rate = 9 [
     (fld_meta).description = "The current rate of frames transmitted"
   ];
 
-  optional float frames_rx_rate = 10 [
+  optional double frames_rx_rate = 10 [
     (fld_meta).description = "The current rate of valid frames received"
   ];
 
-  optional float bytes_tx_rate = 11 [
+  optional double bytes_tx_rate = 11 [
     (fld_meta).description = "The current rate of bytes transmitted"
   ];
 
-  optional float bytes_rx_rate = 12 [
+  optional double bytes_rx_rate = 12 [
     (fld_meta).description = "The current rate of bytes received"
   ];
 }
@@ -3411,15 +3392,15 @@ message FlowMetric {
     (fld_meta).description = "The current total number of bytes received"
   ];
 
-  optional float frames_tx_rate = 10 [
+  optional double frames_tx_rate = 10 [
     (fld_meta).description = "The current rate of frames transmitted"
   ];
 
-  optional float frames_rx_rate = 11 [
+  optional double frames_rx_rate = 11 [
     (fld_meta).description = "The current rate of valid frames received"
   ];
 
-  optional float loss = 12 [
+  optional double loss = 12 [
     (fld_meta).description = "The percentage of lost frames"
   ];
 
@@ -3473,41 +3454,30 @@ message MetricLatency {
 }
 
 message Bgpv4MetricsRequest {
-  option (msg_meta).description = "The request to retrieve BGPv4 per peer metrics/statistics.";
+  option (msg_meta).description = "The request to retrieve BGPv4 Router statistics and learned routing information";
 
-  repeated string peer_names = 1 [
-    (fld_meta).description = "The names of BGPv4 peers to return results for. An empty list will return results for all BGPv4 peers.\n\nx-constraint:\n- /components/schemas/Device.Bgpv4/properties/name\n"
+  repeated string device_names = 1 [
+    (fld_meta).description = "The names of BGPv4 device to return results for. An empty list will return results for all BGPv4 devices.\n\nx-constraint:\n- /components/schemas/Device.Bgpv4/properties/name\n"
   ];
 
   message ColumnNames {
     enum Enum {
       unspecified = 0;
       session_state = 1;
-      session_flap_count = 2;
-      routes_advertised = 3;
-      routes_received = 4;
-      route_withdraws_sent = 5;
-      route_withdraws_received = 6;
-      updates_sent = 7;
-      updates_received = 8;
-      opens_sent = 9;
-      opens_received = 10;
-      keepalives_sent = 11;
-      keepalives_received = 12;
-      notifications_sent = 13;
-      notifications_received = 14;
+      routes_advertised = 2;
+      routes_withdrawn = 3;
     }
   }
   repeated ColumnNames.Enum column_names = 2 [
-    (fld_meta).description = "The list of column names that the returned result set will contain. If the list is empty then all columns will be returned except for any result_groups. The name of the BGPv4 peer cannot be excluded."
+    (fld_meta).description = "The list of column names that the returned result set will contain. If the list is empty then all columns will be returned except for any result_groups. The name of the BGPv4 device cannot be excluded."
   ];
 }
 
 message Bgpv4Metric {
-  option (msg_meta).description = "BGPv4 per peer statistics information.";
+  option (msg_meta).description = "BGPv4 Router statistics and learned routing information";
 
   optional string name = 1 [
-    (fld_meta).description = "The name of a configured BGPv4 peer."
+    (fld_meta).description = "The name of a configured BGPv4 device."
   ];
 
   message SessionState {
@@ -3518,66 +3488,22 @@ message Bgpv4Metric {
     }
   }
   optional SessionState.Enum session_state = 2 [
-    (fld_meta).description = "Session state as up or down. Up refers to an Established state and Down refers to any other state."
+    (fld_meta).description = "Session state as up or down"
   ];
 
-  optional int32 session_flap_count = 3 [
-    (fld_meta).description = "Number of times the session went from Up to Down state."
+  optional int32 routes_advertised = 3 [
+    (fld_meta).description = "Number of advertised routes sent"
   ];
 
-  optional int32 routes_advertised = 4 [
-    (fld_meta).description = "Number of routes advertised."
-  ];
-
-  optional int32 routes_received = 5 [
-    (fld_meta).description = "Number of routes received."
-  ];
-
-  optional int32 route_withdraws_sent = 6 [
-    (fld_meta).description = "Number of route withdraws sent."
-  ];
-
-  optional int32 route_withdraws_received = 7 [
-    (fld_meta).description = "Number of route withdraws received."
-  ];
-
-  optional int32 updates_sent = 8 [
-    (fld_meta).description = "Number of Update messages sent."
-  ];
-
-  optional int32 updates_received = 9 [
-    (fld_meta).description = "Number of Update messages received."
-  ];
-
-  optional int32 opens_sent = 10 [
-    (fld_meta).description = "Number of Open messages sent."
-  ];
-
-  optional int32 opens_received = 11 [
-    (fld_meta).description = "Number of Open messages received."
-  ];
-
-  optional int32 keepalives_sent = 12 [
-    (fld_meta).description = "Number of Keepalive messages sent."
-  ];
-
-  optional int32 keepalives_received = 13 [
-    (fld_meta).description = "Number of Keepalive messages received."
-  ];
-
-  optional int32 notifications_sent = 14 [
-    (fld_meta).description = "Number of Notification messages sent."
-  ];
-
-  optional int32 notifications_received = 15 [
-    (fld_meta).description = "Number of Notification messages received."
+  optional int32 routes_withdrawn = 4 [
+    (fld_meta).description = "Number of routes withdrawn"
   ];
 }
 
 message Bgpv6MetricsRequest {
-  option (msg_meta).description = "The request to retrieve BGPv6 per peer metrics/statistics.";
+  option (msg_meta).description = "The request to retrieve BGPv6 Router statistics and learned routing information";
 
-  repeated string peer_names = 1 [
+  repeated string device_names = 1 [
     (fld_meta).description = "The names of BGPv6 device to return results for. An empty list will return results for all BGPv6 devices.\n\nx-constraint:\n- /components/schemas/Device.Bgpv6/properties/name\n"
   ];
 
@@ -3585,31 +3511,20 @@ message Bgpv6MetricsRequest {
     enum Enum {
       unspecified = 0;
       session_state = 1;
-      session_flap_count = 2;
-      routes_advertised = 3;
-      routes_received = 4;
-      route_withdraws_sent = 5;
-      route_withdraws_received = 6;
-      updates_sent = 7;
-      updates_received = 8;
-      opens_sent = 9;
-      opens_received = 10;
-      keepalives_sent = 11;
-      keepalives_received = 12;
-      notifications_sent = 13;
-      notifications_received = 14;
+      routes_advertised = 2;
+      routes_withdrawn = 3;
     }
   }
   repeated ColumnNames.Enum column_names = 2 [
-    (fld_meta).description = "The list of column names that the returned result set will contain. If the list is empty then all columns will be returned except for any result_groups. The name of the BGPv6 peer cannot be excluded."
+    (fld_meta).description = "The list of column names that the returned result set will contain. If the list is empty then all columns will be returned except for any result_groups. The name of the BGPv6 device cannot be excluded."
   ];
 }
 
 message Bgpv6Metric {
-  option (msg_meta).description = "BGPv6 per peer statistics information.";
+  option (msg_meta).description = "BGPv6 Router statistics and learned routing information";
 
   optional string name = 1 [
-    (fld_meta).description = "The name of a configured BGPv6 peer."
+    (fld_meta).description = "The name of a configured BGPv6 device."
   ];
 
   message SessionState {
@@ -3620,59 +3535,15 @@ message Bgpv6Metric {
     }
   }
   optional SessionState.Enum session_state = 2 [
-    (fld_meta).description = "Session state as up or down. Up refers to an Established state and Down refers to any other state."
+    (fld_meta).description = "Session state as up or down"
   ];
 
-  optional int32 session_flap_count = 3 [
-    (fld_meta).description = "Number of times the session went from Up to Down state."
+  optional int32 routes_advertised = 3 [
+    (fld_meta).description = "Number of advertised routes sent"
   ];
 
-  optional int32 routes_advertised = 4 [
-    (fld_meta).description = "Number of routes advertised."
-  ];
-
-  optional int32 routes_received = 5 [
-    (fld_meta).description = "Number of routes received."
-  ];
-
-  optional int32 route_withdraws_sent = 6 [
-    (fld_meta).description = "Number of route withdraws sent."
-  ];
-
-  optional int32 route_withdraws_received = 7 [
-    (fld_meta).description = "Number of route withdraws received."
-  ];
-
-  optional int32 updates_sent = 8 [
-    (fld_meta).description = "Number of Update messages sent."
-  ];
-
-  optional int32 updates_received = 9 [
-    (fld_meta).description = "Number of Update messages received."
-  ];
-
-  optional int32 opens_sent = 10 [
-    (fld_meta).description = "Number of Open messages sent."
-  ];
-
-  optional int32 opens_received = 11 [
-    (fld_meta).description = "Number of Open messages received."
-  ];
-
-  optional int32 keepalives_sent = 12 [
-    (fld_meta).description = "Number of Keepalive messages sent."
-  ];
-
-  optional int32 keepalives_received = 13 [
-    (fld_meta).description = "Number of Keepalive messages received."
-  ];
-
-  optional int32 notifications_sent = 14 [
-    (fld_meta).description = "Number of Notification messages sent."
-  ];
-
-  optional int32 notifications_received = 15 [
-    (fld_meta).description = "Number of Notification messages received."
+  optional int32 routes_withdrawn = 4 [
+    (fld_meta).description = "Number of routes withdrawn"
   ];
 }
 
@@ -6249,7 +6120,7 @@ message PatternFlowPfcPauseDstCounter {
   option (msg_meta).description = "mac counter pattern";
 
   optional string start = 1 [
-    (fld_meta).default = "01:80:c2:00:00:01",
+    (fld_meta).default = "00:00:00:00:00:00",
     (fld_meta).description = "Description missing in models"
   ];
 
@@ -6282,12 +6153,12 @@ message PatternFlowPfcPauseDst {
   ];
 
   optional string value = 2 [
-    (fld_meta).default = "01:80:c2:00:00:01",
+    (fld_meta).default = "00:00:00:00:00:00",
     (fld_meta).description = "Description missing in models"
   ];
 
   repeated string values = 3 [
-    (fld_meta).default = "['01:80:c2:00:00:01']",
+    (fld_meta).default = "['00:00:00:00:00:00']",
     (fld_meta).description = "Description missing in models"
   ];
 
@@ -7016,7 +6887,7 @@ message PatternFlowEthernetPauseDstCounter {
   option (msg_meta).description = "mac counter pattern";
 
   optional string start = 1 [
-    (fld_meta).default = "01:80:c2:00:00:01",
+    (fld_meta).default = "00:00:00:00:00:00",
     (fld_meta).description = "Description missing in models"
   ];
 
@@ -7049,12 +6920,12 @@ message PatternFlowEthernetPauseDst {
   ];
 
   optional string value = 2 [
-    (fld_meta).default = "01:80:c2:00:00:01",
+    (fld_meta).default = "00:00:00:00:00:00",
     (fld_meta).description = "Description missing in models"
   ];
 
   repeated string values = 3 [
-    (fld_meta).default = "['01:80:c2:00:00:01']",
+    (fld_meta).default = "['00:00:00:00:00:00']",
     (fld_meta).description = "Description missing in models"
   ];
 
@@ -11865,6 +11736,10 @@ message SetConfigRequest {
   Config config = 1;
 }
 
+message UpdateConfigRequest {
+  Config config = 1;
+}
+
 message SetConfigResponse {
   message StatusCode200 {
     Success success = 1;
@@ -11875,10 +11750,28 @@ message SetConfigResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
+}
 
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+message UpdateConfigResponse {
+  message StatusCode200 {
+    Success success = 1;
+  }
+  message StatusCode400 {
+    BadRequest bad_request = 1;
+  }
+  message StatusCode500 {
+    InternalServerError internal_server_error = 1;
+  }
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message GetConfigResponse {
@@ -11891,10 +11784,11 @@ message GetConfigResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message SetTransmitStateRequest {
@@ -11911,10 +11805,11 @@ message SetTransmitStateResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message SetLinkStateRequest {
@@ -11931,10 +11826,11 @@ message SetLinkStateResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message SetCaptureStateRequest {
@@ -11951,30 +11847,11 @@ message SetCaptureStateResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
-}
-
-message UpdateFlowsRequest {
-  FlowsUpdate flows_update = 1;
-}
-
-message UpdateFlowsResponse {
-  message StatusCode200 {
-    Config config = 1;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
   }
-  message StatusCode400 {
-    BadRequest bad_request = 1;
-  }
-  message StatusCode500 {
-    InternalServerError internal_server_error = 1;
-  }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
 }
 
 message SetRouteStateRequest {
@@ -11991,10 +11868,11 @@ message SetRouteStateResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message GetMetricsRequest {
@@ -12011,10 +11889,11 @@ message GetMetricsResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message GetStateMetricsResponse {
@@ -12027,10 +11906,11 @@ message GetStateMetricsResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 message GetCaptureRequest {
@@ -12047,10 +11927,11 @@ message GetCaptureResponse {
   message StatusCode500 {
     InternalServerError internal_server_error = 1;
   }
-
-  optional StatusCode200 status_code_200 = 1;
-  optional StatusCode400 status_code_400 = 2;
-  optional StatusCode500 status_code_500 = 3;
+  oneof statuscode {
+    StatusCode200 status_code_200 = 1;
+    StatusCode400 status_code_400 = 2;
+    StatusCode500 status_code_500 = 3;
+  }
 }
 
 service Openapi {
@@ -12058,6 +11939,9 @@ service Openapi {
 
   rpc SetConfig(SetConfigRequest) returns (SetConfigResponse) {
     option (rpc_meta).description = "Sets configuration resources on the traffic generator.";
+  }
+  rpc UpdateConfig(UpdateConfigRequest) returns (UpdateConfigResponse) {
+    option (rpc_meta).description = "Updates configuration resources on the traffic generator.";
   }
   rpc GetConfig(google.protobuf.Empty) returns (GetConfigResponse) {
     option (rpc_meta).description = "Description missing in models";
@@ -12071,9 +11955,6 @@ service Openapi {
   rpc SetCaptureState(SetCaptureStateRequest) returns (SetCaptureStateResponse) {
     option (rpc_meta).description = "Updates the state of configuration resources on the traffic generator.";
   }
-  rpc UpdateFlows(UpdateFlowsRequest) returns (UpdateFlowsResponse) {
-    option (rpc_meta).description = "Updates flow properties without disruption of transmit state.";
-  }
   rpc SetRouteState(SetRouteStateRequest) returns (SetRouteStateResponse) {
     option (rpc_meta).description = "Updates the state of configuration resources on the traffic generator.";
   }
@@ -12083,7 +11964,7 @@ service Openapi {
   rpc GetStateMetrics(google.protobuf.Empty) returns (GetStateMetricsResponse) {
     option (rpc_meta).description = "Description missing in models";
   }
-  rpc GetCapture(GetCaptureRequest) returns (GetCaptureResponse) {
+  rpc GetCapture(GetCaptureRequest) returns (stream GetCaptureResponse) {
     option (rpc_meta).description = "Description missing in models";
   }
 }

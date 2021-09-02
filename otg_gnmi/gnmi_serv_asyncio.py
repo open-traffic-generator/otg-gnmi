@@ -11,7 +11,6 @@ from .common.client_session import *
 class ServerOptions(object):
     def __init__(self, args):
         self.app_mode = args.app_mode
-        self.unittest = args.unittest
         self.logfile = args.logfile
         self.target_address = "{}:{}".format(
             args.target_host, args.target_port)
