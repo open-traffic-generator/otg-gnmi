@@ -13,3 +13,11 @@ __pycache__/
 server.crt
 server.key
 tests/results.xml
+
+**/*,cover
+otg_gnmi/proto
+otg_gnmi/autogen/otg_*.py
+otg_gnmi/autogen/gnmi_*.py
+tests/mockstatus.txt
+
+*.html

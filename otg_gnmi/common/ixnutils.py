@@ -17,6 +17,7 @@ from ..autogen import gnmi_pb2_grpc, gnmi_pb2
 from ..autogen import otg_pb2
 from .utils import *
 from .client_session import *
+import types
 
 POLL_INTERVAL = 2
 
@@ -244,8 +245,12 @@ class TestManager:
 
     async def parse_requests(self, request_iterator, requests):
         try:
-            async for request in request_iterator.__aiter__():
-                requests.append(request)
+            if isinstance(request_iterator, types.GeneratorType):
+                for request in request_iterator:
+                    requests.append(request)
+            else:
+                async for request in request_iterator.__aiter__():
+                    requests.append(request)
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)

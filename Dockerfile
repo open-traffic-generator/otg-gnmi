@@ -1,33 +1,28 @@
-# Python - gNMI docker image
+# STAGE 1 (DEVELOPMENT)
+FROM ubuntu:20.04 AS dev
+LABEL OTG_API_Version="0.4.12"
+ENV SRC_ROOT=/home/keysight/ixia-c/otg-gnmi
+RUN mkdir -p ${SRC_ROOT}
+# Get project source, install dependencies and build it
+COPY . ${SRC_ROOT}/
+RUN cd ${SRC_ROOT} && chmod +x ./do.sh && ./do.sh deps && ./do.sh art 2>&1
+# Ports to be published
+EXPOSE 40051
+WORKDIR ${SRC_ROOT}
+CMD ["/bin/bash"]
 
-FROM ubuntu:latest
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update \
-	&& apt-get -y install --no-install-recommends python3-pip 
-
-WORKDIR /home/otg-gnmi
-
-#COPY ./requirements.txt ./requirements.txt
-#COPY ./otg-gnmi/proto/* ./otg-gnmi/proto/
-#COPY ./otg-gnmi/autogen/*.py ./otg-gnmi/autogen/
-#COPY ./otg-gnmi/common/*.py ./otg-gnmi/common/
-#COPY ./otg-gnmi/test/*.py ./otg-gnmi/test/
-#COPY ./otg-gnmi/*.py ./otg-gnmi/
-
-COPY . /home/otg-gnmi/
-
-RUN python3 -m pip install --upgrade -r requirements.txt
-
-ENTRYPOINT [ "python3", "-m", "otg_gnmi" ]
-
-# default server port
-EXPOSE 50051
-
-# sudo docker build -t otg-gnmi-server:latest .
-# sudo docker run -p 50051:50051 --rm --name otg-gnmi-server-instance otg-gnmi-server:latest \
-#		--server-port 50051 --app-mode ixnetwork \
-#  		--target-host 10.72.46.133 --target-port 443 \
-#		--server-key server.key --server-crt server.crt
-# sudo docker exec -it otg-gnmi-server-instance sh
+# STAGE 2 (PRODUCTION)
+FROM ubuntu:20.04 as prod
+LABEL OTG_API_Version="0.4.12"
+# Ports to be published
+ENV SRC_ROOT=/home/keysight/ixia-c/otg-gnmi
+EXPOSE 40051
+RUN mkdir -p ${SRC_ROOT}/otg_gnmi
+COPY --from=dev ${SRC_ROOT}/otg_gnmi ${SRC_ROOT}/otg_gnmi/
+COPY --from=dev ${SRC_ROOT}/setup.py ${SRC_ROOT}/
+COPY --from=dev ${SRC_ROOT}/do.sh ${SRC_ROOT}/
+COPY --from=dev ${SRC_ROOT}/requirements.txt ${SRC_ROOT}/
+RUN cd ${SRC_ROOT} && chmod +x ./do.sh && ./do.sh deps 2>&1 && rm ./do.sh && rm ./requirements.txt
+WORKDIR ${SRC_ROOT}
+ENTRYPOINT ["python", "-m", "otg_gnmi"]
 

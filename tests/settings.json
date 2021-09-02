@@ -1,0 +1,5 @@
+{
+    "app-mode": "athena",
+    "insecure": true,
+    "unittest": true
+}
