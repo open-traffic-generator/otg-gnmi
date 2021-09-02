@@ -1,25 +1,40 @@
 {
-    "quiet" : "true",
-    "verbose" : "count",
-    "server" : "127.0.0.1:50051",
-    "username" : "admin",
-    "password" : "admin",
-    "secure" : false,    
-    "servercrt" : "server.crt",
-    "ssl_target_name_override" : "test.local",
-    "ciphers" : "",
-    "interval" : 100,
-    "timeout" : 0,
-    "heartbeat" : 10,
-    "aggregate" : true,
-    "suppress" : true,
-    "submode" : 2,
-    "mode" : 0,
-    "encoding" : 0,
-    "paths" : ["/port_metrics[name=P1]", "/port_metrics[name=P2]"],
-    "prefix" : "",
-    "qos" : "",
-    "use_alias" : true,
-    "stats" : true,
-    "waitForResponses" : 0
+    "quiet": "true",
+    "verbose": "count",
+    "server": "127.0.0.1:50051",
+    "username": "admin",
+    "password": "admin",
+    "secure": false,
+    "servercrt": "server.crt",
+    "ssl_target_name_override": "test.local",
+    "ciphers": "",
+    "interval": 100,
+    "timeout": 0,
+    "heartbeat": 10,
+    "aggregate": true,
+    "suppress": true,
+    "submode": 2,
+    "mode": 0,
+    "encoding": 0,
+    "port_metrics": [
+        "/port_metrics[name=P1]",
+        "/port_metrics[name=P2]"
+    ],
+    "flow_metrics": [
+        "/flow_metrics[name=F1]",
+        "/flow_metrics[name=F2]"
+    ],
+    "bgpv4_metrics": [
+        "/bgpv4_metrics[name=BGPv4-1]",
+        "/bgpv4_metrics[name=BGPv4-2]"
+    ],
+    "bgpv6_metrics": [
+        "/bgpv6_metrics[name=BGPv6-1]",
+        "/bgpv6_metrics[name=BGPv6-2]"
+    ],
+    "prefix": "",
+    "qos": "",
+    "use_alias": true,
+    "stats": true,
+    "waitForResponses": 0
 }

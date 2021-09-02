@@ -1,0 +1,40 @@
+{
+    "port_metrics": [
+        {
+            "location": "localhost;1;1",
+            "name": "P1"
+        },
+        {
+            "location": "localhost;1;2",
+            "name": "P2"
+        }
+    ],
+    "flow_metrics": [
+        {
+            "name": "F1"
+        },
+        {
+            "name": "F2"
+        }
+    ],
+    "bgpv4_metrics": [
+        {
+            "name"          : "BGPv4-1",
+            "session_state" : "down"
+        },
+        {
+            "name"          : "BGPv4-2",
+            "session_state" : "up"            
+        }
+    ],
+    "bgpv6_metrics": [
+        {
+            "name"          : "BGPv6-1",
+            "session_state" : "up"
+        },
+        {
+            "name"          : "BGPv6-2",
+            "session_state" : "up"            
+        }
+    ] 
+}

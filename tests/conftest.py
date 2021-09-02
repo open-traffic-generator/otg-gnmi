@@ -6,28 +6,6 @@ import time
 sys.path.append('.')
 
 
-'''
-@pytest.fixture(scope='module')
-def grpc_add_to_server():
-    from otg_gnmi.autogen.gnmi_pb2_grpc import add_gNMIServicer_to_server
-    
-    return add_gNMIServicer_to_server
-
-
-@pytest.fixture(scope='module')
-def grpc_servicer():
-    from otg_gnmi.autogen.gnmi_pb2_grpc import gNMIServicer
-    
-    return gNMIServicer()
-
-
-@pytest.fixture(scope='module')
-def grpc_stub(grpc_channel):
-    from otg_gnmi.autogen.gnmi_pb2_grpc import gNMIStub
-
-    return gNMIStub(grpc_channel)
-'''
-
 @pytest.fixture(scope='module')
 def gnmi_server():
     gnmi_server = subprocess.Popen(
@@ -46,12 +24,13 @@ def gnmi_server():
         stderr=subprocess.STDOUT,
     )
     # Give the server time to start
-    time.sleep(2) 
+    time.sleep(2)
     yield gnmi_server
     # Shut it down at the end of the pytest session
     # Give the server time to flush any pending request
     time.sleep(2)
     gnmi_server.terminate()
+
 
 @pytest.fixture(scope='session')
 def snappiserver():
@@ -67,15 +46,15 @@ def snappiserver():
         stderr=subprocess.STDOUT,
     )
     # Give the server time to start
-    time.sleep(2) 
+    time.sleep(2)
     yield snappiserver
     # Shut it down at the end of the pytest session
     snappiserver.terminate()
 
+
 @pytest.fixture(scope="session")
-def session():    
+def session():
     from tests.session import Session
     session = Session()
     session.options.waitForResponses = 3
     return session
-
