@@ -19,7 +19,7 @@ if __name__ == '__main__':
                         default='localhost',
                         )
     parser.add_argument('--target-port', help='target port number',
-                        default=11009,
+                        default=11020,
                         type=int)
     parser.add_argument('--unittest', help='set to true if running unit test',
                         action='store_true')

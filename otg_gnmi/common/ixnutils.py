@@ -345,7 +345,7 @@ class TestManager:
             return self.api
         target = None
         if self.unittest:
-            target = "http://{}".format('127.0.0.1:11009')
+            target = "http://{}".format('127.0.0.1:11020')
         else:
             target = "https://{}".format(self.target_address)
         self.logger.info(

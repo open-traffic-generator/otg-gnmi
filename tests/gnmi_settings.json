@@ -1,7 +1,7 @@
 {
     "quiet": "true",
     "verbose": "count",
-    "server": "127.0.0.1:50051",
+    "server": "127.0.0.1:50052",
     "username": "admin",
     "password": "admin",
     "secure": false,

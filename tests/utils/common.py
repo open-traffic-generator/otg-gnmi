@@ -49,7 +49,7 @@ def get_mockserver_status():
 def get_parsed_args(op_val):
     parser = argparse.ArgumentParser()
     parser.add_argument('--server-port', help='gRPC server port number',
-                        default=50051,
+                        default=50052,
                         type=int)
     parser.add_argument('--app-mode', help='target Application mode)',
                         choices=['ixnetwork', 'athena'],
@@ -59,7 +59,7 @@ def get_parsed_args(op_val):
                         default='localhost',
                         )
     parser.add_argument('--target-port', help='target port number',
-                        default=11009,
+                        default=11020,
                         type=int)
     parser.add_argument('--unittest', help='set to true if running unit test',
                         action='store_true')

@@ -162,7 +162,7 @@ def after_request(resp):
 
 
 def web_server():
-    app.run(port=11009, debug=True, use_reloader=False)
+    app.run(port=11020, debug=True, use_reloader=False)
 
 
 class SnappiServer(object):
@@ -182,7 +182,7 @@ class SnappiServer(object):
     def _wait_until_ready(self):
         while True:
             try:
-                r = requests.get(url='http://127.0.0.1:11009/status')
+                r = requests.get(url='http://127.0.0.1:11020/status')
                 res = r.json()
                 if res['status'] != 'up':
                     raise Exception('waiting for SnappiServer to be up')
