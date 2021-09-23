@@ -27,6 +27,10 @@ if __name__ == '__main__':
                         help='logfile name [date and time auto appended]',
                         default='gNMIServer',
                         type=str)
+    parser.add_argument('--log-stdout',
+                        help='show log on stdout, in addition to file',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--insecure',
                         help='disable TSL security, by defualt enabled',
                         action='store_true')
