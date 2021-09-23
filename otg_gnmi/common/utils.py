@@ -48,8 +48,8 @@ def init_logging(name):
 '''
 
 
-def init_logging(logger_name, level=logging.DEBUG):
-    l = logging.getLogger(logger_name)
+def init_logging(logger_name, level=logging.DEBUG, log_stdout=False):
+    logger = logging.getLogger(logger_name)
     logfile = logger_name+'-'+str(get_current_time())+'.log'
     logs_dir = os.path.join(os.path.curdir, 'logs')
     if not os.path.exists(logs_dir):
@@ -60,9 +60,10 @@ def init_logging(logger_name, level=logging.DEBUG):
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
-    l.setLevel(level)
-    l.addHandler(fileHandler)
-    # l.addHandler(streamHandler)
+    logger.setLevel(level)
+    logger.addHandler(fileHandler)
+    if log_stdout:
+        logger.addHandler(streamHandler)
     return logger_name
 
 

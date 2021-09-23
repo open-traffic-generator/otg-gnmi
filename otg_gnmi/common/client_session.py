@@ -1,8 +1,5 @@
 
-# python
-import asyncio
-
-
+# client_session.py
 class ClientSession(object):
     def __init__(self, context, requests):
         self.context = context
@@ -12,7 +9,7 @@ class ClientSession(object):
         self.requests = requests
 
     def send_sync(self):
-        if self.sent_sync == False:
+        if self.sent_sync is False:
             for val in self.subscribed_paths.values():
                 if val == 0:
                     return False

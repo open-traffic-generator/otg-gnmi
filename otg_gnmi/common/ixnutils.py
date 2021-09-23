@@ -1,22 +1,19 @@
-# utils.pyfrom __future__ import print_function
+# ixnutils.py
 import logging
 import json
 import asyncio
 import time
 from threading import Thread, Lock
-import traceback
-import copy
 
 
 from google.protobuf.any_pb2 import Any
-from google.protobuf.json_format import Parse
 
 import snappi
 
-from ..autogen import gnmi_pb2_grpc, gnmi_pb2
+from ..autogen import gnmi_pb2
 from ..autogen import otg_pb2
-from .utils import *
-from .client_session import *
+from .utils import gnmi_path_to_string, get_subscription_type, RequestPathBase, RequestType # noqa
+from .client_session import ClientSession
 import types
 
 POLL_INTERVAL = 2
@@ -42,7 +39,9 @@ class SubscriptionReq:
         self.gnmipath = subscription.path
         self.stringpath, self.name = gnmi_path_to_string(subscription)
         self.type = get_subscription_type(self.stringpath)
-        self.callback, self.deserializer = TestManager.Instance().get_callback(self.stringpath)
+        self.callback, self.deserializer = TestManager.Instance().get_callback(
+            self.stringpath
+        )
         self.sample_interval = subscription.sample_interval
         self.last_polled = None
         self.last_yield = None
@@ -71,7 +70,7 @@ class SubscriptionReq:
         stats = None
         if self.mode == gnmi_pb2.SubscriptionMode.ON_CHANGE:
 
-            if self.delta_stats == None or len(self.delta_stats) == 0:
+            if self.delta_stats is None or len(self.delta_stats) == 0:
                 self.encoded_stats = None
                 return
             stats = json.dumps(self.delta_stats)
@@ -103,11 +102,11 @@ class SubscriptionReq:
 
     def compute_delta(self):
         delta = {}
-        if self.curr_stats == None:
+        if self.curr_stats is None:
             self.delta_stats = None
             return
 
-        if self.prev_stats == None:
+        if self.prev_stats is None:
             for key, curr_value in self.curr_stats._properties.items():
                 delta[key] = curr_value
             self.delta_stats = delta
@@ -143,7 +142,7 @@ class TestManager:
 
     async def init_once_func(self, options):
         try:
-            if self.init_once == False:
+            if self.init_once is False:
                 self.app_mode = options.app_mode
                 self.unittest = options.unittest
                 self.target_address = options.target_address
@@ -172,7 +171,10 @@ class TestManager:
         def get_supported_models():
             supported_models = []
             otg_model = gnmi_pb2.ModelData(
-                name='open-traffic-generator', organization='otg', version=get_version())
+                name='open-traffic-generator',
+                organization='otg',
+                version=get_version()
+            )
             supported_models.append(otg_model)
             return supported_models
 
@@ -186,9 +188,11 @@ class TestManager:
         def get_version():
             return '0.0.1'
 
-        cap_response = gnmi_pb2.CapabilityResponse(supported_models=get_supported_models(),
-                                                   supported_encodings=get_supported_encodings(),
-                                                   gNMI_version=get_version())
+        cap_response = gnmi_pb2.CapabilityResponse(
+            supported_models=get_supported_models(),
+            supported_encodings=get_supported_encodings(),
+            gNMI_version=get_version()
+        )
         return cap_response
 
     def start_worker_threads(self):
@@ -224,7 +228,10 @@ class TestManager:
         else:
             requests = []
             try:
-                await asyncio.wait_for(self.parse_requests(request_iterator, requests), timeout=1.0)
+                await asyncio.wait_for(
+                    self.parse_requests(request_iterator, requests),
+                    timeout=1.0
+                )
             except asyncio.TimeoutError as ex:
                 self.logger.error(
                     'Parse request timed out exception: %s', str(ex))
@@ -283,10 +290,10 @@ class TestManager:
                 sub.error = None
                 names.append(sub.name)
                 name_to_sub_reverse_map[sub.name] = sub
-            #self.logger.info('Collect %s stats for %s', meta, names)
+            # self.logger.info('Collect %s stats for %s', meta, names)
             try:
                 metrics = sub.callback(names)
-                #self.logger.info('Collected %s stats for %s', meta, metrics)
+                # self.logger.info('Collected %s stats for %s', meta, metrics)
                 for metric in metrics:
                     if metric.name not in name_to_sub_reverse_map:
                         continue
@@ -302,13 +309,16 @@ class TestManager:
 
         except Exception:
             self.logger.error(
-                "Fatal error in collecting stats for %s: names:%s", meta, names)
+                "Fatal error in collecting stats for %s: names:%s",
+                meta,
+                names
+            )
             self.logger.error("Fatal error: ", exc_info=True)
 
     def collect_flow_stats(self):
         global POLL_INTERVAL
         self.logger.info('Started flow stats collection thread')
-        while self.stopped == False:
+        while self.stopped is False:
             if len(self.flow_subscriptions) > 0:
                 self.collect_stats(self.flow_subscriptions, 'Flow')
             time.sleep(POLL_INTERVAL)
@@ -316,7 +326,7 @@ class TestManager:
     def collect_port_stats(self):
         global POLL_INTERVAL
         self.logger.info('Started port stats collection thread')
-        while self.stopped == False:
+        while self.stopped is False:
             if len(self.port_subscriptions) > 0:
                 self.collect_stats(self.port_subscriptions, 'Port')
             time.sleep(POLL_INTERVAL)
@@ -325,7 +335,7 @@ class TestManager:
         global POLL_INTERVAL
         time.sleep(POLL_INTERVAL)
         self.logger.info('Started protocol stats collection thread')
-        while self.stopped == False:
+        while self.stopped is False:
             if len(self.protocol_subscriptions) > 0:
                 self.collect_stats(self.protocol_subscriptions, 'Protocol')
             time.sleep(POLL_INTERVAL)
@@ -408,7 +418,7 @@ class TestManager:
         return sync_resp
 
     def create_error_response(self, stats_name, error_message):
-        #err = gnmi_pb2.Error(data=stats_name, message=error_message)
+        # err = gnmi_pb2.Error(data=stats_name, message=error_message)
         err = gnmi_pb2.Error(message=stats_name + ': ' + error_message)
         err_res = gnmi_pb2.SubscribeResponse(error=err)
         return err_res
@@ -427,8 +437,10 @@ class TestManager:
             sub = self.flow_subscriptions[path]
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-        self.logger.info('Protocol Subscriptions: total subscription = %s', len(
-            self.protocol_subscriptions))
+        self.logger.info(
+            'Protocol Subscriptions: total subscription = %s',
+            len(self.protocol_subscriptions)
+        )
         for path in self.protocol_subscriptions:
             sub = self.protocol_subscriptions[path]
             self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
@@ -439,7 +451,7 @@ class TestManager:
             'Register Subscription for %s elements', len(session.requests))
         try:
             for request in session.requests:
-                if request == None:
+                if request is None:
                     continue
                 session.mode = request.subscribe.mode
                 for subscription in request.subscribe.subscription:
@@ -472,7 +484,7 @@ class TestManager:
             'Deregister Subscription for %s elements', len(session.requests))
         try:
             for request in session.requests:
-                if request == None:
+                if request is None:
                     continue
                 session.mode = request.subscribe.mode
                 for subscription in request.subscribe.subscription:
@@ -499,14 +511,14 @@ class TestManager:
         results = []
 
         def publish(key, subscriptions, session, res, meta=None):
-            #self.logger.info('Publish %s Stats %s', meta, key)
+            # self.logger.info('Publish %s Stats %s', meta, key)
             sub = subscriptions[key]
 
-            if sub.error != None:
+            if sub.error is not None:
                 res.append(self.create_error_response(sub.name, sub.error))
                 return
 
-            if sub.encoded_stats != None:
+            if sub.encoded_stats is not None:
                 res.append(sub.encoded_stats)
                 sub.client.update_stats(key)
 
@@ -528,7 +540,7 @@ class TestManager:
         return results
 
     async def keep_polling(self):
-        return self.stopped == False
+        return self.stopped is False
 
 
 # if __name__ == 'main':

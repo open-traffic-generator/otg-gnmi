@@ -1,11 +1,10 @@
-import asyncio
+# gnmi_serv_asyncio.py
+
 import grpc
-import time
 import logging
 from .autogen import gnmi_pb2_grpc, gnmi_pb2
-from .common.ixnutils import *
-from .common.utils import *
-from .common.client_session import *
+from .common.ixnutils import TestManager
+from .common.utils import get_subscription_mode_string
 
 
 class ServerOptions(object):
@@ -33,7 +32,7 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
         the target supports. The models can then be specified in subsequent RPCs
         to restrict the set of data that is utilized.
         Reference: gNMI Specification Section 3.2
-        """
+        """ # noqa
         response = await TestManager.Instance().get_supported_models()
         context.set_code(grpc.StatusCode.OK)
         context.set_details('Success!')
@@ -70,17 +69,25 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
         """
 
         self.logger.info(
-            'Received subscription request. Metadata: %s', context.invocation_metadata())
-        self.logger.info('Received subscription request. Peer %s, Peer Identities %s',
-                         context.peer(), context.peer_identities())
+            'Received subscription request. Metadata: %s',
+            context.invocation_metadata()
+        )
+        self.logger.info(
+            'Received subscription request. Peer %s, Peer Identities %s',
+            context.peer(),
+            context.peer_identities()
+        )
 
         init, error = await TestManager.Instance().init_once_func(self.options)
-        if init == False:
+        if init is False:
             context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
             context.set_details(error)
             raise Exception(error)
 
-        session = await TestManager.Instance().create_session(context, request_iterator)
+        session = await TestManager.Instance().create_session(
+            context,
+            request_iterator
+        )
         # https://github.com/grpc/grpc/issues/23070
         # context.add_done_callback(TestManager.Instance().terminate(request_iterator))
         await TestManager.Instance().register_subscription(session)
@@ -93,15 +100,19 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             try:
                 responses = await TestManager.Instance().publish_stats(session)
                 for response in responses:
-                    if response != None:
+                    if response is not None:
                         self.logger.info('Response[%s]: %s', counter, response)
                         yield response
                 counter = counter + 1
-                if (session.mode == gnmi_pb2.SubscriptionList.Mode.ONCE or
-                        session.mode == gnmi_pb2.SubscriptionList.Mode.POLL) and \
-                        session.sent_sync == True:
-                    self.logger.info('Completed for %s, sync sent %s',
-                                     get_subscription_mode_string(session.mode), session.sent_sync)
+                if (
+                    session.mode == gnmi_pb2.SubscriptionList.Mode.ONCE or
+                    session.mode == gnmi_pb2.SubscriptionList.Mode.POLL) and \
+                        session.sent_sync is True:
+                    self.logger.info(
+                        'Completed for %s, sync sent %s',
+                        get_subscription_mode_string(session.mode),
+                        session.sent_sync
+                    )
                     break
 
             except BaseException as innerEx:
