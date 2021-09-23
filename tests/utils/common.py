@@ -68,9 +68,9 @@ def get_parsed_args(op_val):
                         help='logfile name [date and time auto appended]',
                         default='gNMIServer',
                         type=str)
-    parser.add_argument('--log-stdout',
-                        help='show log on stdout, in addition to file',
-                        default=False,
+    parser.add_argument('--no-stdout',
+                        help='do not show log on stdout',
+                        default=True,
                         action='store_true')
     parser.add_argument('--insecure',
                         help='disable TSL security, by defualt enabled',

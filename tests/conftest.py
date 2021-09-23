@@ -21,7 +21,8 @@ def gnmi_server():
             "--app-mode",
             "athena",
             "--unittest",
-            "--insecure"
+            "--insecure",
+            "--no-stdout"
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

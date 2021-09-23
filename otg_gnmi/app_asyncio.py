@@ -21,10 +21,11 @@ class AsyncServer:
         global server
 
         # https://github.com/grpc/grpc/issues/23070
+        log_stdout = not args.no_stdout
         args.logfile = init_logging(
             args.logfile,
             logging.DEBUG,
-            args.log_stdout
+            log_stdout
         )
         server_logger = logging.getLogger(
             args.logfile)
