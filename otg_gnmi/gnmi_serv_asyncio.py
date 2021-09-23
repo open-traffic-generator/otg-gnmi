@@ -1,8 +1,10 @@
 # gnmi_serv_asyncio.py
 
-import grpc
 import logging
-from .autogen import gnmi_pb2_grpc, gnmi_pb2
+
+import grpc
+
+from .autogen import gnmi_pb2, gnmi_pb2_grpc
 from .common.ixnutils import TestManager
 from .common.utils import get_subscription_mode_string
 

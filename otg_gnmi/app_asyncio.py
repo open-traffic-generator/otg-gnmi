@@ -1,19 +1,25 @@
 # app_asyncio.py
+import logging
+import signal
+
 import grpc
 import grpc.experimental.aio as grpc_async
 from grpc_reflection.v1alpha import reflection
-import logging
 
-from .autogen import gnmi_pb2_grpc, gnmi_pb2
+from .autogen import gnmi_pb2, gnmi_pb2_grpc
 from .common.ixnutils import TestManager
 from .common.utils import init_logging
 from .gnmi_serv_asyncio import AsyncGnmiService
+
+server = None
 
 
 class AsyncServer:
 
     @staticmethod
     async def run(args) -> None:
+        global server
+
         # https://github.com/grpc/grpc/issues/23070
         args.logfile = init_logging(
             args.logfile,
@@ -22,6 +28,8 @@ class AsyncServer:
         )
         server_logger = logging.getLogger(
             args.logfile)
+
+        signal.signal(signal.SIGTERM, sighandler)
 
         grpc_async.init_grpc_aio()
         server = grpc.aio.server()
@@ -81,5 +89,16 @@ class AsyncServer:
             server_logger.info('Stopping async server')
             TestManager.Instance().terminate()
             all_rpcs_done_event = await server.stop(5)
+            server = None
             all_rpcs_done_event.wait(30)
             print("Server shutdown gracefully")
+
+
+def sighandler(signum, frame):
+    global server
+
+    if server is not None:
+        TestManager.Instance().terminate()
+        server.stop(5)
+        server = None
+        print("Server shutdown gracefully")

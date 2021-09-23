@@ -1,9 +1,11 @@
 # conftest.py
-import pytest
-import sys
 import subprocess
+import sys
 import time
+
+import pytest
 from otg_gnmi.common.ixnutils import TestManager
+
 sys.path.append('.')
 
 

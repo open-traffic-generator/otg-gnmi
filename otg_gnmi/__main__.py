@@ -1,9 +1,8 @@
 # __main__.py
-import asyncio
 import argparse
+import asyncio
 
 from .app_asyncio import AsyncServer
-
 
 if __name__ == '__main__':
     # parse arguments

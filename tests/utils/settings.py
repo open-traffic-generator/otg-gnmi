@@ -1,9 +1,6 @@
 import json
 import os
 import sys
-import time
-import logging
-from datetime import datetime
 
 if sys.version_info[0] >= 3:
     # alias str as unicode for python3 and above
@@ -121,7 +118,8 @@ class GnmiSettings(JsonSerializer):
                          ('password', self.password)]
 
     def is_done(self, curr_upds, factor):
-        if self.waitForResponses != 0 and self.waitForResponses*factor <= curr_upds:
+        if self.waitForResponses != 0 and \
+                self.waitForResponses*factor <= curr_upds:
             return True
         return False
 

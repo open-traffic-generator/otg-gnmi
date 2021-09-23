@@ -1,8 +1,8 @@
-import os
 import datetime
 import logging
-from enum import Enum
+import os
 import re
+from enum import Enum
 
 from ..autogen import gnmi_pb2
 

@@ -1,12 +1,13 @@
 import argparse
 import json
 import os
-from tests.utils.client_utils import generate_subscription_request
+
 import grpc
 import mock
 from google.protobuf import json_format
 from otg_gnmi.autogen import gnmi_pb2
 from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
+from tests.utils.client_utils import generate_subscription_request
 from tests.utils.settings import GnmiSettings
 
 SETTINGS_FILE = 'settings.json'
