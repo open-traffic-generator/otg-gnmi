@@ -19,7 +19,7 @@ class AsyncServer:
     @staticmethod
     async def run(args) -> None:
         # https://github.com/grpc/grpc/issues/23070
-        args.logfile = init_logging(args.logfile, logging.DEBUG, args.log_stdout)
+        args.logfile = init_logging(args.logfile, logging.DEBUG, True)
         server_logger = logging.getLogger(
             args.logfile)
 
