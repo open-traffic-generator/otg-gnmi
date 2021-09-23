@@ -59,13 +59,13 @@ def test_subscribe_port_and_protocol(gnmi_server, snappiserver, session):
     assert(result is True)
 
 
-# def test_subscribe_flow_and_protocol(gnmi_server, snappiserver, session):
-#     change_mockserver_status(200, False)
-#     result = session.subscribe(['flow_metrics', 'bgpv4_metrics'])
-#     assert(result is True)
+def test_subscribe_flow_and_protocol(gnmi_server, snappiserver, session):
+    change_mockserver_status(200, False)
+    result = session.subscribe(['flow_metrics', 'bgpv4_metrics'])
+    assert(result is True)
 
 
-# def test_subscribe_multiple_protocol(gnmi_server, snappiserver, session):
-#     change_mockserver_status(200, False)
-#     result = session.subscribe(['bgpv4_metrics', 'bgpv6_metrics'])
-#     assert(result is True)
+def test_subscribe_multiple_protocol(gnmi_server, snappiserver, session):
+    change_mockserver_status(200, False)
+    result = session.subscribe(['bgpv4_metrics', 'bgpv6_metrics'])
+    assert(result is True)
