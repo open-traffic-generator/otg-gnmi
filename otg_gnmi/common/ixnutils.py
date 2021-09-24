@@ -1,20 +1,18 @@
 # ixnutils.py
-import logging
-import json
 import asyncio
+import json
+import logging
 import time
-from threading import Thread, Lock
-
-
-from google.protobuf.any_pb2 import Any
+import types
+from threading import Lock, Thread
 
 import snappi
+from google.protobuf.any_pb2 import Any
 
-from ..autogen import gnmi_pb2
-from ..autogen import otg_pb2
-from .utils import gnmi_path_to_string, get_subscription_type, RequestPathBase, RequestType # noqa
+from ..autogen import gnmi_pb2, otg_pb2
 from .client_session import ClientSession
-import types
+from .utils import (RequestPathBase, RequestType, get_subscription_type,
+                    gnmi_path_to_string)
 
 POLL_INTERVAL = 2
 

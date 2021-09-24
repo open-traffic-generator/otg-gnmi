@@ -1,9 +1,8 @@
 # __main__.py
-import asyncio
 import argparse
+import asyncio
 
 from .app_asyncio import AsyncServer
-
 
 if __name__ == '__main__':
     # parse arguments
@@ -27,6 +26,10 @@ if __name__ == '__main__':
                         help='logfile name [date and time auto appended]',
                         default='gNMIServer',
                         type=str)
+    parser.add_argument('--no-stdout',
+                        help='do not show log on stdout',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--insecure',
                         help='disable TSL security, by defualt enabled',
                         action='store_true')

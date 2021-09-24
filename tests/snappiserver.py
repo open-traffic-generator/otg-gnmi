@@ -1,13 +1,15 @@
-from flask import Flask, request, Response
-import multiprocessing
 import json
-import time
-import snappi
 import logging
+import multiprocessing
+import time
+
 import requests
-from tests.utils.settings import MockConfig
+import snappi
+from flask import Flask, Response, request
 from otg_gnmi.common.utils import init_logging
+
 from tests.utils.common import get_mockserver_status
+from tests.utils.settings import MockConfig
 
 app = Flask(__name__)
 CONFIG = MockConfig()

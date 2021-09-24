@@ -1,13 +1,10 @@
-import os
 import datetime
 import logging
-import json
-import asyncio
-import time
-from enum import Enum
+import os
 import re
+from enum import Enum
 
-from ..autogen import gnmi_pb2_grpc, gnmi_pb2
+from ..autogen import gnmi_pb2
 
 
 class RequestPathBase():
@@ -32,22 +29,6 @@ def get_current_time():
     return current_utc
 
 
-'''
-def init_logging(name):
-    logs_dir = os.path.join(os.path.curdir, 'logs')
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
-    logfile = name+'-'+str(get_current_time())+'.log'
-    logfile = os.path.join(logs_dir, logfile)  
-    logging.basicConfig(
-        filename=logfile, 
-        level=logging.INFO,
-        format='%(asctime)s %(message)s', 
-        datefmt='%m/%d/%Y %I:%M:%S %p')
-    return logfile
-'''
-
-
 def init_logging(logger_name, level=logging.DEBUG, log_stdout=False):
     logger = logging.getLogger(logger_name)
     logfile = logger_name+'-'+str(get_current_time())+'.log'
@@ -68,7 +49,7 @@ def init_logging(logger_name, level=logging.DEBUG, log_stdout=False):
 
 
 def is_none_or_empty(data):
-    if data == None or len(data) == 0:
+    if data is None or len(data) == 0:
         return True
     else:
         return False
@@ -78,14 +59,18 @@ def list_from_path(path='/'):
     if path:
         if path[0] == '/':
             if path[-1] == '/':
-                return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[1:-1]
+                return re.split(
+                    '''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[1:-1] # noqa
             else:
-                return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[1:]
+                return re.split(
+                    '''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[1:] # noqa
         else:
             if path[-1] == '/':
-                return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[:-1]
+                return re.split(
+                    '''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)[:-1] # noqa
             else:
-                return re.split('''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path)
+                return re.split(
+                    '''/(?=(?:[^\[\]]|\[[^\[\]]+\])*$)''', path) # noqa
     return []
 
 
@@ -94,8 +79,8 @@ def path_from_string(path='/'):
 
     for e in list_from_path(path):
         eName = e.split("[", 1)[0]
-        eKeys = re.findall('\[(.*?)\]', e)
-        #print ('eName: %s, eKey: %s' % (eName, eKey))
+        eKeys = re.findall('\[(.*?)\]', e) # noqa
+        # print ('eName: %s, eKey: %s' % (eName, eKey))
         dKeys = dict(x.split('=', 1) for x in eKeys)
         mypath.append(gnmi_pb2.PathElem(name=eName, key=dKeys))
 
@@ -110,7 +95,7 @@ def gnmi_path_to_string(subscription):
     name = ''
     for ele in subscription.path.elem:
         path = path + '/' + ele.name
-        if ele.key == None or len(ele.key) == 0:
+        if ele.key is None or len(ele.key) == 0:
             continue
         for key in ele.key:
             path = path + '[' + key + ':' + ele.key[key] + ']'
