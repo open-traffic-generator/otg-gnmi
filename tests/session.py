@@ -72,6 +72,8 @@ class Session(object):
             request = gnmi_pb2.CapabilityRequest()
             responses = self.stub.Capabilities(
                 request, metadata=self.options.metadata)
+            print("Hi")
+            print(responses)
             self.logger.info('CapabilityRequest Response: %s', responses)
             if responses is not None:
                 result = True
@@ -162,6 +164,8 @@ class Session(object):
                 paths.extend(self.options.bgpv4_metrics)
             if type == 'bgpv6_metrics':
                 paths.extend(self.options.bgpv6_metrics)
+            if type == 'isis_metrics':
+                paths.extend(self.options.isis_metrics)
 
         for path in paths:
             mypath = path_from_string(path)
@@ -272,3 +276,4 @@ if __name__ == '__main__':
     sessoin.subscribe('flow_metrics')
     sessoin.subscribe('bgpv4_metrics')
     sessoin.subscribe('bgpv6_metrics')
+    sessoin.subscribe('isis_metrics')

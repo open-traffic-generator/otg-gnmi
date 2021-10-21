@@ -137,6 +137,13 @@ def get_metrics():
                     routes_received=500
                 )
 
+        elif metrics_request.choice == 'isis':
+            for metric in CONFIG.isis_metrics:
+                metrics_response.isis_metrics.metric(
+                    name=metric['name'],
+                    l1_sessions_up=metric["l1_sessions_up"],
+                )
+
         return Response(metrics_response.serialize(),
                         mimetype='application/json',
                         status=200)

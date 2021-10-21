@@ -12,6 +12,7 @@ class RequestPathBase():
     BASE_FLOW_PATH = r'/flow_metrics'
     BASE_BGPv4_PATH = r'/bgpv4_metrics'
     BASE_BGPv6_PATH = r'/bgpv6_metrics'
+    BASE_ISIS_PATH = r'/isis_metrics'
 
 
 class RequestType(Enum):

@@ -206,11 +206,15 @@ class TestManager:
         self.protocol_stats_thread.start()
 
     def stop_worker_threads(self):
-        self.logger.info('Stopping all collection threads')
+        if hasattr(self, 'logger'):
+            self.logger.info('Stopping all collection threads')
         self.stopped = True
-        self.flow_stats_thread.join()
-        self.port_stats_thread.join()
-        self.protocol_stats_thread.join()
+        if hasattr(self, 'flow_stats_thread'):
+            self.flow_stats_thread.join()
+        if hasattr(self, 'port_stats_thread'):
+            self.port_stats_thread.join()
+        if hasattr(self, 'protocol_stats_thread'):
+            self.protocol_stats_thread.join()
 
     async def terminate(self, request_iterator):
         self.logger.info('Terminate connection')
@@ -270,6 +274,8 @@ class TestManager:
             return self.get_bgpv4_metric, otg_pb2.Bgpv4Metric()
         if path.find(RequestPathBase.BASE_BGPv6_PATH) != -1:
             return self.get_bgpv6_metric, otg_pb2.Bgpv6Metric()
+        if path.find(RequestPathBase.BASE_ISIS_PATH) != -1:
+            return self.get_isis_metric, otg_pb2.IsisMetric()
         return None
 
     def collect_stats(self, subscriptions, meta):
@@ -390,6 +396,14 @@ class TestManager:
         req.bgpv4.peer_names = peer_names
         res = api.get_metrics(req)
         return res.bgpv4_metrics
+
+    def get_isis_metric(self, router_names, stat_names=None):
+        api = self.get_api()
+        req = api.metrics_request()
+        req.choice = "isis"
+        req.isis.router_names = router_names
+        res = api.get_metrics(req)
+        return res.isis_metrics
 
     def create_update_response(self, encoding, stats_name, stats):
 
