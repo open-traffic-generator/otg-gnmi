@@ -17,7 +17,7 @@ def gnmi_server():
             "-m",
             "otg_gnmi",
             "--server-port",
-            "50080",
+            "50020",
             "--app-mode",
             "athena",
             "--unittest",
