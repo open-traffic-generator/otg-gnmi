@@ -124,3 +124,9 @@ def get_subscription_mode_string(mode):
         return 'ONCE'
     if mode == 2:
         return 'POLL'
+
+
+def get_time_elapsed(start):
+    end = datetime.datetime.now()
+    elapsed = end - start
+    return elapsed.total_seconds() * 10 ** 9

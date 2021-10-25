@@ -1,5 +1,6 @@
 # ixnutils.py
 import asyncio
+import datetime
 import json
 import logging
 import time
@@ -12,7 +13,7 @@ from google.protobuf.any_pb2 import Any
 from ..autogen import gnmi_pb2, otg_pb2
 from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
-                    gnmi_path_to_string)
+                    get_time_elapsed, gnmi_path_to_string)
 
 POLL_INTERVAL = 2
 
@@ -139,120 +140,177 @@ class TestManager:
         return TestManager.m_instance
 
     async def init_once_func(self, options):
+        api_start = datetime.datetime.now()
         try:
-            if self.init_once is False:
-                self.app_mode = options.app_mode
-                self.unittest = options.unittest
-                self.target_address = options.target_address
-                self.logger = logging.getLogger(options.logfile)
+            try:
+                if self.init_once is False:
+                    self.app_mode = options.app_mode
+                    self.unittest = options.unittest
+                    self.target_address = options.target_address
+                    self.logger = logging.getLogger(options.logfile)
 
-                self.api = None
-                self.stopped = False
+                    self.api = None
+                    self.stopped = False
 
-                self.client_sessions = {}
-                self.port_subscriptions = {}
-                self.flow_subscriptions = {}
-                self.protocol_subscriptions = {}
+                    self.client_sessions = {}
+                    self.port_subscriptions = {}
+                    self.flow_subscriptions = {}
+                    self.protocol_subscriptions = {}
 
-                self.lock = Lock()
-                self.get_api()
-                self.start_worker_threads()
+                    self.lock = Lock()
+                    self.get_api()
+                    self.start_worker_threads()
 
-                self.init_once = True
-                return self.init_once, None
-        except Exception as ex:
-            return self.init_once, str(ex)
-        return self.init_once, None
+                    self.init_once = True
+                    return self.init_once, None
+            except Exception as ex:
+                return self.init_once, str(ex)
+            return self.init_once, None
+        finally:
+            self.logger.info(
+                "init_once_func took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def get_supported_models(self):
+        api_start = datetime.datetime.now()
+        try:
+            def get_supported_models():
+                supported_models = []
+                otg_model = gnmi_pb2.ModelData(
+                    name='open-traffic-generator',
+                    organization='otg',
+                    version=get_version()
+                )
+                supported_models.append(otg_model)
+                return supported_models
 
-        def get_supported_models():
-            supported_models = []
-            otg_model = gnmi_pb2.ModelData(
-                name='open-traffic-generator',
-                organization='otg',
-                version=get_version()
+            def get_supported_encodings():
+                supported_encodings = []
+                supported_encodings.append(gnmi_pb2.Encoding.JSON)
+                supported_encodings.append(gnmi_pb2.Encoding.JSON_IETF)
+                supported_encodings.append(gnmi_pb2.Encoding.PROTO)
+                return supported_encodings
+
+            def get_version():
+                return '0.0.1'
+
+            cap_response = gnmi_pb2.CapabilityResponse(
+                supported_models=get_supported_models(),
+                supported_encodings=get_supported_encodings(),
+                gNMI_version=get_version()
             )
-            supported_models.append(otg_model)
-            return supported_models
-
-        def get_supported_encodings():
-            supported_encodings = []
-            supported_encodings.append(gnmi_pb2.Encoding.JSON)
-            supported_encodings.append(gnmi_pb2.Encoding.JSON_IETF)
-            supported_encodings.append(gnmi_pb2.Encoding.PROTO)
-            return supported_encodings
-
-        def get_version():
-            return '0.0.1'
-
-        cap_response = gnmi_pb2.CapabilityResponse(
-            supported_models=get_supported_models(),
-            supported_encodings=get_supported_encodings(),
-            gNMI_version=get_version()
-        )
-        return cap_response
+            return cap_response
+        finally:
+            if hasattr(self, 'logger'):
+                self.logger.info(
+                    "get_supported_models took {} nanoseconds".format(
+                        get_time_elapsed(api_start)
+                    )
+                )
 
     def start_worker_threads(self):
-        self.logger.info('Starting all collection threads')
-        self.flow_stats_thread = Thread(
-            target=self.collect_flow_stats, args=[])
-        self.flow_stats_thread.start()
-        self.port_stats_thread = Thread(
-            target=self.collect_port_stats, args=[])
-        self.port_stats_thread.start()
-        self.protocol_stats_thread = Thread(
-            target=self.collect_protocol_stats, args=[])
-        self.protocol_stats_thread.start()
+        api_start = datetime.datetime.now()
+        try:
+            self.logger.info('Starting all collection threads')
+            self.flow_stats_thread = Thread(
+                target=self.collect_flow_stats, args=[])
+            self.flow_stats_thread.start()
+            self.port_stats_thread = Thread(
+                target=self.collect_port_stats, args=[])
+            self.port_stats_thread.start()
+            self.protocol_stats_thread = Thread(
+                target=self.collect_protocol_stats, args=[])
+            self.protocol_stats_thread.start()
+        finally:
+            self.logger.info(
+                "start_worker_threads took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def stop_worker_threads(self):
-        if hasattr(self, 'logger'):
-            self.logger.info('Stopping all collection threads')
-        self.stopped = True
-        if hasattr(self, 'flow_stats_thread'):
-            self.flow_stats_thread.join()
-        if hasattr(self, 'port_stats_thread'):
-            self.port_stats_thread.join()
-        if hasattr(self, 'protocol_stats_thread'):
-            self.protocol_stats_thread.join()
+        api_start = datetime.datetime.now()
+        try:
+            if hasattr(self, 'logger'):
+                self.logger.info('Stopping all collection threads')
+            self.stopped = True
+            if hasattr(self, 'flow_stats_thread'):
+                self.flow_stats_thread.join()
+            if hasattr(self, 'port_stats_thread'):
+                self.port_stats_thread.join()
+            if hasattr(self, 'protocol_stats_thread'):
+                self.protocol_stats_thread.join()
+        finally:
+            self.logger.info(
+                "stop_worker_threads took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def terminate(self, request_iterator):
-        self.logger.info('Terminate connection')
-        self.stop_worker_threads()
-        await self.deregister_subscription(request_iterator)
-        self.dump_all_subscription()
+        api_start = datetime.datetime.now()
+        try:
+            self.logger.info('Terminate connection')
+            self.stop_worker_threads()
+            await self.deregister_subscription(request_iterator)
+            self.dump_all_subscription()
+        finally:
+            self.logger.info(
+                "terminate took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def create_session(self, context, request_iterator):
-        self.lock.acquire()
-        session = None
-        if context in self.client_sessions:
-            session = self.client_sessions[context]
-        else:
-            requests = []
-            try:
-                await asyncio.wait_for(
-                    self.parse_requests(request_iterator, requests),
-                    timeout=1.0
-                )
-            except asyncio.TimeoutError as ex:
-                self.logger.error(
-                    'Parse request timed out exception: %s', str(ex))
+        api_start = datetime.datetime.now()
+        try:
+            self.lock.acquire()
+            session = None
+            if context in self.client_sessions:
+                session = self.client_sessions[context]
+            else:
+                requests = []
+                try:
+                    await asyncio.wait_for(
+                        self.parse_requests(request_iterator, requests),
+                        timeout=1.0
+                    )
+                except asyncio.TimeoutError as ex:
+                    self.logger.error(
+                        'Parse request timed out exception: %s', str(ex))
 
-            session = ClientSession(context, requests)
-            self.client_sessions[context] = session
-            self.logger.info('Created new session %s', context)
-        self.lock.release()
-        return session
+                session = ClientSession(context, requests)
+                self.client_sessions[context] = session
+                self.logger.info('Created new session %s', context)
+            self.lock.release()
+            return session
+        finally:
+            self.logger.info(
+                "create_session took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def remove_session(self, context):
-        self.lock.acquire()
-        if context in self.client_sessions:
-            session = self.client_sessions.pop(context)
-            self.logger.info('Removed new session %s', context)
-        self.lock.release()
-        return session
+        api_start = datetime.datetime.now()
+        try:
+            self.lock.acquire()
+            if context in self.client_sessions:
+                session = self.client_sessions.pop(context)
+                self.logger.info('Removed new session %s', context)
+            self.lock.release()
+            return session
+        finally:
+            self.logger.info(
+                "remove_session took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def parse_requests(self, request_iterator, requests):
+        api_start = datetime.datetime.now()
         try:
             if isinstance(request_iterator, types.GeneratorType):
                 for request in request_iterator:
@@ -263,27 +321,49 @@ class TestManager:
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)
+        finally:
+            self.logger.info(
+                "parse_requests took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_callback(self, path):
-
-        if path.find(RequestPathBase.BASE_PORT_PATH) != -1:
-            return self.get_port_metric, otg_pb2.PortMetric()
-        if path.find(RequestPathBase.BASE_FLOW_PATH) != -1:
-            return self.get_flow_metric, otg_pb2.FlowMetric()
-        if path.find(RequestPathBase.BASE_BGPv4_PATH) != -1:
-            return self.get_bgpv4_metric, otg_pb2.Bgpv4Metric()
-        if path.find(RequestPathBase.BASE_BGPv6_PATH) != -1:
-            return self.get_bgpv6_metric, otg_pb2.Bgpv6Metric()
-        if path.find(RequestPathBase.BASE_ISIS_PATH) != -1:
-            return self.get_isis_metric, otg_pb2.IsisMetric()
-        return None
+        api_start = datetime.datetime.now()
+        try:
+            if path.find(RequestPathBase.BASE_PORT_PATH) != -1:
+                return self.get_port_metric, otg_pb2.PortMetric()
+            if path.find(RequestPathBase.BASE_FLOW_PATH) != -1:
+                return self.get_flow_metric, otg_pb2.FlowMetric()
+            if path.find(RequestPathBase.BASE_BGPv4_PATH) != -1:
+                return self.get_bgpv4_metric, otg_pb2.Bgpv4Metric()
+            if path.find(RequestPathBase.BASE_BGPv6_PATH) != -1:
+                return self.get_bgpv6_metric, otg_pb2.Bgpv6Metric()
+            if path.find(RequestPathBase.BASE_ISIS_PATH) != -1:
+                return self.get_isis_metric, otg_pb2.IsisMetric()
+            return None
+        finally:
+            self.logger.info(
+                "get_callback took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def collect_stats(self, subscriptions, meta):
-        self.lock.acquire()
-        self._collect_stats(subscriptions, meta)
-        self.lock.release()
+        api_start = datetime.datetime.now()
+        try:
+            self.lock.acquire()
+            self._collect_stats(subscriptions, meta)
+            self.lock.release()
+        finally:
+            self.logger.info(
+                "collect_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def _collect_stats(self, subscriptions, meta):
+        api_start = datetime.datetime.now()
         try:
             if len(subscriptions) == 0:
                 return
@@ -318,241 +398,401 @@ class TestManager:
                 names
             )
             self.logger.error("Fatal error: ", exc_info=True)
+        finally:
+            self.logger.info(
+                "_collect_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def collect_flow_stats(self):
-        global POLL_INTERVAL
-        self.logger.info('Started flow stats collection thread')
-        while self.stopped is False:
-            if len(self.flow_subscriptions) > 0:
-                self.collect_stats(self.flow_subscriptions, 'Flow')
-            time.sleep(POLL_INTERVAL)
+        api_start = datetime.datetime.now()
+        try:
+            global POLL_INTERVAL
+            self.logger.info('Started flow stats collection thread')
+            while self.stopped is False:
+                if len(self.flow_subscriptions) > 0:
+                    self.collect_stats(self.flow_subscriptions, 'Flow')
+                time.sleep(POLL_INTERVAL)
+        finally:
+            self.logger.info(
+                "collect_flow_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def collect_port_stats(self):
-        global POLL_INTERVAL
-        self.logger.info('Started port stats collection thread')
-        while self.stopped is False:
-            if len(self.port_subscriptions) > 0:
-                self.collect_stats(self.port_subscriptions, 'Port')
-            time.sleep(POLL_INTERVAL)
+        api_start = datetime.datetime.now()
+        try:
+            global POLL_INTERVAL
+            self.logger.info('Started port stats collection thread')
+            while self.stopped is False:
+                if len(self.port_subscriptions) > 0:
+                    self.collect_stats(self.port_subscriptions, 'Port')
+                time.sleep(POLL_INTERVAL)
+        finally:
+            self.logger.info(
+                "collect_port_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def collect_protocol_stats(self):
-        global POLL_INTERVAL
-        time.sleep(POLL_INTERVAL)
-        self.logger.info('Started protocol stats collection thread')
-        while self.stopped is False:
-            if len(self.protocol_subscriptions) > 0:
-                self.collect_stats(self.protocol_subscriptions, 'Protocol')
+        api_start = datetime.datetime.now()
+        try:
+            global POLL_INTERVAL
             time.sleep(POLL_INTERVAL)
+            self.logger.info('Started protocol stats collection thread')
+            while self.stopped is False:
+                if len(self.protocol_subscriptions) > 0:
+                    self.collect_stats(self.protocol_subscriptions, 'Protocol')
+                time.sleep(POLL_INTERVAL)
+        finally:
+            self.logger.info(
+                "collect_protocol_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_api(self):
-        if self.init_once:
-            return self.api
-        target = None
-        if self.unittest:
-            target = "http://{}".format('127.0.0.1:11020')
-        else:
-            target = "https://{}".format(self.target_address)
-        self.logger.info(
-            'Initializing snappi for %s at target %s', self.app_mode, target)
-        # when using ixnetwork extension, host is IxNetwork API Server
+        api_start = datetime.datetime.now()
+        try:
+            if self.init_once:
+                return self.api
+            target = None
+            if self.unittest:
+                target = "http://{}".format('127.0.0.1:11020')
+            else:
+                target = "https://{}".format(self.target_address)
+            self.logger.info(
+                'Initializing snappi for %s at target %s',
+                self.app_mode,
+                target
+            )
+            # when using ixnetwork extension, host is IxNetwork API Server
 
-        if self.app_mode == 'ixnetwork':
-            self.api = snappi.api(location=target, ext='ixnetwork')
-            global POLL_INTERVAL
-            POLL_INTERVAL = POLL_INTERVAL * 2
-        else:
-            self.api = snappi.api(location=target)
-        self.logger.info('Initialized snappi...')
-        return self.api
+            if self.app_mode == 'ixnetwork':
+                self.api = snappi.api(location=target, ext='ixnetwork')
+                global POLL_INTERVAL
+                POLL_INTERVAL = POLL_INTERVAL * 2
+            else:
+                self.api = snappi.api(location=target)
+            self.logger.info('Initialized snappi...')
+            return self.api
+        finally:
+            self.logger.info(
+                "get_api took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_flow_metric(self, flow_names, stat_names=None):
-        api = self.get_api()
-        req = api.metrics_request()
-        req.choice = "flow"
-        req.flow.flow_names = flow_names
-        res = api.get_metrics(req)
-        return res.flow_metrics
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.metrics_request()
+            req.choice = "flow"
+            req.flow.flow_names = flow_names
+            res = api.get_metrics(req)
+            return res.flow_metrics
+        finally:
+            self.logger.info(
+                "get_flow_metric took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_port_metric(self, port_names, stat_names=None):
-        api = self.get_api()
-        req = api.metrics_request()
-        req.choice = "port"
-        req.port.port_names = port_names
-        res = api.get_metrics(req)
-        return res.port_metrics
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.metrics_request()
+            req.choice = "port"
+            req.port.port_names = port_names
+            res = api.get_metrics(req)
+            return res.port_metrics
+        finally:
+            self.logger.info(
+                "get_port_metric took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_bgpv6_metric(self, peer_names, stat_names=None):
-        api = self.get_api()
-        req = api.metrics_request()
-        req.choice = "bgpv6"
-        req.bgpv6.peer_names = peer_names
-        res = api.get_metrics(req)
-        return res.bgpv6_metrics
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.metrics_request()
+            req.choice = "bgpv6"
+            req.bgpv6.peer_names = peer_names
+            res = api.get_metrics(req)
+            return res.bgpv6_metrics
+        finally:
+            self.logger.info(
+                "get_bgpv6_metric took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_bgpv4_metric(self, peer_names, stat_names=None):
-        api = self.get_api()
-        req = api.metrics_request()
-        req.choice = "bgpv4"
-        req.bgpv4.peer_names = peer_names
-        res = api.get_metrics(req)
-        return res.bgpv4_metrics
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.metrics_request()
+            req.choice = "bgpv4"
+            req.bgpv4.peer_names = peer_names
+            res = api.get_metrics(req)
+            return res.bgpv4_metrics
+        finally:
+            self.logger.info(
+                "get_bgpv4_metric took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def get_isis_metric(self, router_names, stat_names=None):
-        api = self.get_api()
-        req = api.metrics_request()
-        req.choice = "isis"
-        req.isis.router_names = router_names
-        res = api.get_metrics(req)
-        return res.isis_metrics
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.metrics_request()
+            req.choice = "isis"
+            req.isis.router_names = router_names
+            res = api.get_metrics(req)
+            return res.isis_metrics
+        finally:
+            self.logger.info(
+                "get_isis_metric took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def create_update_response(self, encoding, stats_name, stats):
+        api_start = datetime.datetime.now()
+        try:
+            val = None
+            if encoding == gnmi_pb2.Encoding.JSON:
+                val = gnmi_pb2.TypedValue(json_val=stats.encode("utf-8"))
+            if encoding == gnmi_pb2.Encoding.JSON_IETF:
+                val = gnmi_pb2.TypedValue(json_ietf_val=stats.encode("utf-8"))
+            if encoding == gnmi_pb2.Encoding.PROTO:
+                val = gnmi_pb2.TypedValue(any_val=stats)
 
-        val = None
-        if encoding == gnmi_pb2.Encoding.JSON:
-            val = gnmi_pb2.TypedValue(json_val=stats.encode("utf-8"))
-        if encoding == gnmi_pb2.Encoding.JSON_IETF:
-            val = gnmi_pb2.TypedValue(json_ietf_val=stats.encode("utf-8"))
-        if encoding == gnmi_pb2.Encoding.PROTO:
-            val = gnmi_pb2.TypedValue(any_val=stats)
-
-        path = gnmi_pb2.Path(elem=[
-            gnmi_pb2.PathElem(name='val', key={'name': stats_name})
-        ])
-        update = gnmi_pb2.Update(path=path, val=val)
-        milliseconds = int(round(time.time() * 1000))
-        notification = gnmi_pb2.Notification(
-            timestamp=milliseconds, update=[update])
-        sub_res = gnmi_pb2.SubscribeResponse(update=notification)
-        return sub_res
+            path = gnmi_pb2.Path(elem=[
+                gnmi_pb2.PathElem(name='val', key={'name': stats_name})
+            ])
+            update = gnmi_pb2.Update(path=path, val=val)
+            milliseconds = int(round(time.time() * 1000))
+            notification = gnmi_pb2.Notification(
+                timestamp=milliseconds, update=[update])
+            sub_res = gnmi_pb2.SubscribeResponse(update=notification)
+            return sub_res
+        finally:
+            self.logger.info(
+                "create_update_response took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def encode_sync(self):
-        sync_resp = gnmi_pb2.SubscribeResponse(sync_response=True)
-        return sync_resp
+        api_start = datetime.datetime.now()
+        try:
+            sync_resp = gnmi_pb2.SubscribeResponse(sync_response=True)
+            return sync_resp
+        finally:
+            self.logger.info(
+                "encode_sync took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def create_error_response(self, stats_name, error_message):
-        # err = gnmi_pb2.Error(data=stats_name, message=error_message)
-        err = gnmi_pb2.Error(message=stats_name + ': ' + error_message)
-        err_res = gnmi_pb2.SubscribeResponse(error=err)
-        return err_res
+        api_start = datetime.datetime.now()
+        try:
+            # err = gnmi_pb2.Error(data=stats_name, message=error_message)
+            err = gnmi_pb2.Error(message=stats_name + ': ' + error_message)
+            err_res = gnmi_pb2.SubscribeResponse(error=err)
+            return err_res
+        finally:
+            self.logger.info(
+                "create_error_response took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     def dump_all_subscription(self):
+        api_start = datetime.datetime.now()
+        try:
+            self.logger.info(
+                'Port Subscriptions: total subscription = %s', len(
+                    self.port_subscriptions))
+            for path in self.port_subscriptions:
+                sub = self.port_subscriptions[path]
+                self.logger.info(
+                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-        self.logger.info('Port Subscriptions: total subscription = %s', len(
-            self.port_subscriptions))
-        for path in self.port_subscriptions:
-            sub = self.port_subscriptions[path]
-            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
+            self.logger.info(
+                'Flow Subscriptions: total subscription = %s', len(
+                    self.flow_subscriptions))
+            for path in self.flow_subscriptions:
+                sub = self.flow_subscriptions[path]
+                self.logger.info(
+                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
-        self.logger.info('Flow Subscriptions: total subscription = %s', len(
-            self.flow_subscriptions))
-        for path in self.flow_subscriptions:
-            sub = self.flow_subscriptions[path]
-            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
-
-        self.logger.info(
-            'Protocol Subscriptions: total subscription = %s',
-            len(self.protocol_subscriptions)
-        )
-        for path in self.protocol_subscriptions:
-            sub = self.protocol_subscriptions[path]
-            self.logger.info('\t\tSubscriptions: %s, Name: %s', path, sub.name)
+            self.logger.info(
+                'Protocol Subscriptions: total subscription = %s',
+                len(self.protocol_subscriptions)
+            )
+            for path in self.protocol_subscriptions:
+                sub = self.protocol_subscriptions[path]
+                self.logger.info(
+                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+        finally:
+            self.logger.info(
+                "dump_all_subscription took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def register_subscription(self, session):
-        self.lock.acquire()
-        self.logger.info(
-            'Register Subscription for %s elements', len(session.requests))
+        api_start = datetime.datetime.now()
         try:
-            for request in session.requests:
-                if request is None:
-                    continue
-                session.mode = request.subscribe.mode
-                for subscription in request.subscribe.subscription:
-                    sub = SubscriptionReq(
-                        request.subscribe, session, subscription)
-                    sub.client.register_path(sub.stringpath)
-                    sub.encoding = request.subscribe.encoding
-                    self.logger.info(
-                        'Register Subscription %s', sub.stringpath)
-                    if sub.type == RequestType.PORT:
-                        self.port_subscriptions[sub.stringpath] = sub
-                    elif sub.type == RequestType.FLOW:
-                        self.flow_subscriptions[sub.stringpath] = sub
-                    elif sub.type == RequestType.PROTOCOL:
-                        self.protocol_subscriptions[sub.stringpath] = sub
-                    else:
+            self.lock.acquire()
+            self.logger.info(
+                'Register Subscription for %s elements', len(session.requests))
+            try:
+                for request in session.requests:
+                    if request is None:
+                        continue
+                    session.mode = request.subscribe.mode
+                    for subscription in request.subscribe.subscription:
+                        sub = SubscriptionReq(
+                            request.subscribe, session, subscription)
+                        sub.client.register_path(sub.stringpath)
+                        sub.encoding = request.subscribe.encoding
                         self.logger.info(
-                            'Unknown Subscription %s', sub.stringpath)
-        except Exception as ex:
-            self.logger.error('Exception: %s', str(ex))
-            self.logger.error('Exception: ', exc_info=True)
+                            'Register Subscription %s', sub.stringpath)
+                        if sub.type == RequestType.PORT:
+                            self.port_subscriptions[sub.stringpath] = sub
+                        elif sub.type == RequestType.FLOW:
+                            self.flow_subscriptions[sub.stringpath] = sub
+                        elif sub.type == RequestType.PROTOCOL:
+                            self.protocol_subscriptions[sub.stringpath] = sub
+                        else:
+                            self.logger.info(
+                                'Unknown Subscription %s', sub.stringpath)
+            except Exception as ex:
+                self.logger.error('Exception: %s', str(ex))
+                self.logger.error('Exception: ', exc_info=True)
 
-        self.dump_all_subscription()
-        self.lock.release()
+            self.dump_all_subscription()
+            self.lock.release()
+        finally:
+            self.logger.info(
+                "register_subscription took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def deregister_subscription(self, session):
-        self.lock.acquire()
-
-        self.logger.info(
-            'Deregister Subscription for %s elements', len(session.requests))
+        api_start = datetime.datetime.now()
         try:
-            for request in session.requests:
-                if request is None:
-                    continue
-                session.mode = request.subscribe.mode
-                for subscription in request.subscribe.subscription:
-                    sub = SubscriptionReq(
-                        request.subscribe, session, subscription)
-                    sub.client.deregister_path(sub.stringpath)
-                    self.logger.info(
-                        'Deregister Subscription %s', sub.stringpath)
-                    if sub.type == RequestType.PORT:
-                        self.port_subscriptions.pop(sub.stringpath)
-                    elif sub.type == RequestType.FLOW:
-                        self.flow_subscriptions.pop(sub.stringpath)
-                    elif sub.type == RequestType.PROTOCOL:
-                        self.protocol_subscriptions.pop(sub.stringpath)
-        except Exception as ex:
-            self.logger.error('Exception: %s', str(ex))
-            self.logger.error('Exception: ', exc_info=True)
+            self.lock.acquire()
 
-        self.dump_all_subscription()
-        self.lock.release()
-        # self.stop_worker_threads()
+            self.logger.info(
+                'Deregister Subscription for %s elements', len(
+                    session.requests))
+            try:
+                for request in session.requests:
+                    if request is None:
+                        continue
+                    session.mode = request.subscribe.mode
+                    for subscription in request.subscribe.subscription:
+                        sub = SubscriptionReq(
+                            request.subscribe, session, subscription)
+                        sub.client.deregister_path(sub.stringpath)
+                        self.logger.info(
+                            'Deregister Subscription %s', sub.stringpath)
+                        if sub.type == RequestType.PORT:
+                            self.port_subscriptions.pop(sub.stringpath)
+                        elif sub.type == RequestType.FLOW:
+                            self.flow_subscriptions.pop(sub.stringpath)
+                        elif sub.type == RequestType.PROTOCOL:
+                            self.protocol_subscriptions.pop(sub.stringpath)
+            except Exception as ex:
+                self.logger.error('Exception: %s', str(ex))
+                self.logger.error('Exception: ', exc_info=True)
+
+            self.dump_all_subscription()
+            self.lock.release()
+            # self.stop_worker_threads()
+
+        finally:
+            self.logger.info(
+                "deregister_subscription took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def publish_stats(self, session):
-        results = []
+        api_start = datetime.datetime.now()
+        try:
+            results = []
 
-        def publish(key, subscriptions, session, res, meta=None):
-            # self.logger.info('Publish %s Stats %s', meta, key)
-            sub = subscriptions[key]
+            def publish(key, subscriptions, session, res, meta=None):
+                api_start = datetime.datetime.now()
+                try:
+                    # self.logger.info('Publish %s Stats %s', meta, key)
+                    sub = subscriptions[key]
 
-            if sub.error is not None:
-                res.append(self.create_error_response(sub.name, sub.error))
-                return
+                    if sub.error is not None:
+                        res.append(self.create_error_response(
+                            sub.name, sub.error))
+                        return
 
-            if sub.encoded_stats is not None:
-                res.append(sub.encoded_stats)
-                sub.client.update_stats(key)
+                    if sub.encoded_stats is not None:
+                        res.append(sub.encoded_stats)
+                        sub.client.update_stats(key)
+                finally:
+                    self.logger.info(
+                        "publish took {} nanoseconds".format(
+                            get_time_elapsed(api_start)
+                        )
+                    )
 
-        self.lock.acquire()
-        for key in self.port_subscriptions:
-            publish(key, self.port_subscriptions, session, results, 'Port')
+            self.lock.acquire()
+            for key in self.port_subscriptions:
+                publish(key, self.port_subscriptions, session, results, 'Port')
 
-        for key in self.flow_subscriptions:
-            publish(key, self.flow_subscriptions, session, results, 'Flow')
+            for key in self.flow_subscriptions:
+                publish(key, self.flow_subscriptions, session, results, 'Flow')
 
-        for key in self.protocol_subscriptions:
-            publish(key, self.protocol_subscriptions,
-                    session, results, 'Protocol')
-        self.lock.release()
+            for key in self.protocol_subscriptions:
+                publish(key, self.protocol_subscriptions,
+                        session, results, 'Protocol')
+            self.lock.release()
 
-        if session.send_sync():
-            results.append(self.encode_sync())
+            if session.send_sync():
+                results.append(self.encode_sync())
 
-        return results
+            return results
+
+        finally:
+            self.logger.info(
+                "publish_stats took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
     async def keep_polling(self):
-        return self.stopped is False
+        api_start = datetime.datetime.now()
+        try:
+            return self.stopped is False
+        finally:
+            self.logger.info(
+                "keep_polling took {} nanoseconds".format(
+                    get_time_elapsed(api_start)
+                )
+            )
 
 
 # if __name__ == 'main':
