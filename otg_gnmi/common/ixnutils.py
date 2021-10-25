@@ -2,10 +2,10 @@
 import asyncio
 import datetime
 import json
-import logging
 import time
 import types
 from threading import Lock, Thread
+import logging
 
 import snappi
 from google.protobuf.any_pb2 import Any
@@ -13,7 +13,7 @@ from google.protobuf.any_pb2 import Any
 from ..autogen import gnmi_pb2, otg_pb2
 from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
-                    get_time_elapsed, gnmi_path_to_string)
+                    get_time_elapsed, gnmi_path_to_string, init_logging)
 
 POLL_INTERVAL = 2
 
@@ -147,7 +147,23 @@ class TestManager:
                     self.app_mode = options.app_mode
                     self.unittest = options.unittest
                     self.target_address = options.target_address
-                    self.logger = logging.getLogger(options.logfile)
+                    log_stdout = not options.no_stdout
+
+                    self.logger = init_logging(
+                        'gnmi',
+                        'ixutils-TestManager',
+                        options.logfile,
+                        logging.DEBUG,
+                        log_stdout
+                    )
+
+                    self.profile_logger = init_logging(
+                        'profile',
+                        'ixutils-TestManager',
+                        options.logfile,
+                        logging.DEBUG,
+                        log_stdout
+                    )
 
                     self.api = None
                     self.stopped = False
@@ -167,10 +183,10 @@ class TestManager:
                 return self.init_once, str(ex)
             return self.init_once, None
         finally:
-            self.logger.info(
-                "init_once_func took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "init_once_func completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def get_supported_models(self):
@@ -203,11 +219,11 @@ class TestManager:
             )
             return cap_response
         finally:
-            if hasattr(self, 'logger'):
-                self.logger.info(
-                    "get_supported_models took {} nanoseconds".format(
-                        get_time_elapsed(api_start)
-                    )
+            if hasattr(self, 'profile_logger'):
+                self.profile_logger.info(
+                    "get_supported_models completed!", extra={
+                        'nanoseconds':  get_time_elapsed(api_start)
+                    }
                 )
 
     def start_worker_threads(self):
@@ -224,10 +240,10 @@ class TestManager:
                 target=self.collect_protocol_stats, args=[])
             self.protocol_stats_thread.start()
         finally:
-            self.logger.info(
-                "start_worker_threads took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "start_worker_threads completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def stop_worker_threads(self):
@@ -243,11 +259,12 @@ class TestManager:
             if hasattr(self, 'protocol_stats_thread'):
                 self.protocol_stats_thread.join()
         finally:
-            self.logger.info(
-                "stop_worker_threads took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
+            if hasattr(self, 'profile_logger'):
+                self.profile_logger.info(
+                    "stop_worker_threads completed!", extra={
+                        'nanoseconds':  get_time_elapsed(api_start)
+                    }
                 )
-            )
 
     async def terminate(self, request_iterator):
         api_start = datetime.datetime.now()
@@ -257,10 +274,10 @@ class TestManager:
             await self.deregister_subscription(request_iterator)
             self.dump_all_subscription()
         finally:
-            self.logger.info(
-                "terminate took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "terminate completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def create_session(self, context, request_iterator):
@@ -287,10 +304,10 @@ class TestManager:
             self.lock.release()
             return session
         finally:
-            self.logger.info(
-                "create_session took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "create_session completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def remove_session(self, context):
@@ -303,10 +320,10 @@ class TestManager:
             self.lock.release()
             return session
         finally:
-            self.logger.info(
-                "remove_session took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "remove_session completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def parse_requests(self, request_iterator, requests):
@@ -322,10 +339,10 @@ class TestManager:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)
         finally:
-            self.logger.info(
-                "parse_requests took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "parse_requests completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_callback(self, path):
@@ -343,10 +360,10 @@ class TestManager:
                 return self.get_isis_metric, otg_pb2.IsisMetric()
             return None
         finally:
-            self.logger.info(
-                "get_callback took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_callback completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def collect_stats(self, subscriptions, meta):
@@ -356,10 +373,10 @@ class TestManager:
             self._collect_stats(subscriptions, meta)
             self.lock.release()
         finally:
-            self.logger.info(
-                "collect_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "collect_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def _collect_stats(self, subscriptions, meta):
@@ -399,10 +416,10 @@ class TestManager:
             )
             self.logger.error("Fatal error: ", exc_info=True)
         finally:
-            self.logger.info(
-                "_collect_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "_collect_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def collect_flow_stats(self):
@@ -415,10 +432,10 @@ class TestManager:
                     self.collect_stats(self.flow_subscriptions, 'Flow')
                 time.sleep(POLL_INTERVAL)
         finally:
-            self.logger.info(
-                "collect_flow_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "collect_flow_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def collect_port_stats(self):
@@ -431,10 +448,10 @@ class TestManager:
                     self.collect_stats(self.port_subscriptions, 'Port')
                 time.sleep(POLL_INTERVAL)
         finally:
-            self.logger.info(
-                "collect_port_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "collect_port_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def collect_protocol_stats(self):
@@ -448,10 +465,10 @@ class TestManager:
                     self.collect_stats(self.protocol_subscriptions, 'Protocol')
                 time.sleep(POLL_INTERVAL)
         finally:
-            self.logger.info(
-                "collect_protocol_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "collect_protocol_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_api(self):
@@ -480,10 +497,10 @@ class TestManager:
             self.logger.info('Initialized snappi...')
             return self.api
         finally:
-            self.logger.info(
-                "get_api took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_api completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_flow_metric(self, flow_names, stat_names=None):
@@ -496,10 +513,10 @@ class TestManager:
             res = api.get_metrics(req)
             return res.flow_metrics
         finally:
-            self.logger.info(
-                "get_flow_metric took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_flow_metric completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_port_metric(self, port_names, stat_names=None):
@@ -512,10 +529,10 @@ class TestManager:
             res = api.get_metrics(req)
             return res.port_metrics
         finally:
-            self.logger.info(
-                "get_port_metric took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_port_metric completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_bgpv6_metric(self, peer_names, stat_names=None):
@@ -528,10 +545,10 @@ class TestManager:
             res = api.get_metrics(req)
             return res.bgpv6_metrics
         finally:
-            self.logger.info(
-                "get_bgpv6_metric took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_bgpv6_metric completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_bgpv4_metric(self, peer_names, stat_names=None):
@@ -544,10 +561,10 @@ class TestManager:
             res = api.get_metrics(req)
             return res.bgpv4_metrics
         finally:
-            self.logger.info(
-                "get_bgpv4_metric took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_bgpv4_metric completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def get_isis_metric(self, router_names, stat_names=None):
@@ -560,10 +577,10 @@ class TestManager:
             res = api.get_metrics(req)
             return res.isis_metrics
         finally:
-            self.logger.info(
-                "get_isis_metric took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "get_isis_metric completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def create_update_response(self, encoding, stats_name, stats):
@@ -587,10 +604,10 @@ class TestManager:
             sub_res = gnmi_pb2.SubscribeResponse(update=notification)
             return sub_res
         finally:
-            self.logger.info(
-                "create_update_response took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "create_update_response completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def encode_sync(self):
@@ -599,10 +616,10 @@ class TestManager:
             sync_resp = gnmi_pb2.SubscribeResponse(sync_response=True)
             return sync_resp
         finally:
-            self.logger.info(
-                "encode_sync took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "encode_sync completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def create_error_response(self, stats_name, error_message):
@@ -613,10 +630,10 @@ class TestManager:
             err_res = gnmi_pb2.SubscribeResponse(error=err)
             return err_res
         finally:
-            self.logger.info(
-                "create_error_response took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "create_error_response completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     def dump_all_subscription(self):
@@ -647,10 +664,10 @@ class TestManager:
                 self.logger.info(
                     '\t\tSubscriptions: %s, Name: %s', path, sub.name)
         finally:
-            self.logger.info(
-                "dump_all_subscription took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "dump_all_subscription completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def register_subscription(self, session):
@@ -687,10 +704,10 @@ class TestManager:
             self.dump_all_subscription()
             self.lock.release()
         finally:
-            self.logger.info(
-                "register_subscription took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "register_subscription completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def deregister_subscription(self, session):
@@ -727,10 +744,10 @@ class TestManager:
             # self.stop_worker_threads()
 
         finally:
-            self.logger.info(
-                "deregister_subscription took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "deregister_subscription completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def publish_stats(self, session):
@@ -739,25 +756,17 @@ class TestManager:
             results = []
 
             def publish(key, subscriptions, session, res, meta=None):
-                api_start = datetime.datetime.now()
-                try:
-                    # self.logger.info('Publish %s Stats %s', meta, key)
-                    sub = subscriptions[key]
+                # self.logger.info('Publish %s Stats %s', meta, key)
+                sub = subscriptions[key]
 
-                    if sub.error is not None:
-                        res.append(self.create_error_response(
-                            sub.name, sub.error))
-                        return
+                if sub.error is not None:
+                    res.append(self.create_error_response(
+                        sub.name, sub.error))
+                    return
 
-                    if sub.encoded_stats is not None:
-                        res.append(sub.encoded_stats)
-                        sub.client.update_stats(key)
-                finally:
-                    self.logger.info(
-                        "publish took {} nanoseconds".format(
-                            get_time_elapsed(api_start)
-                        )
-                    )
+                if sub.encoded_stats is not None:
+                    res.append(sub.encoded_stats)
+                    sub.client.update_stats(key)
 
             self.lock.acquire()
             for key in self.port_subscriptions:
@@ -777,10 +786,10 @@ class TestManager:
             return results
 
         finally:
-            self.logger.info(
-                "publish_stats took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "publish_stats completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
     async def keep_polling(self):
@@ -788,10 +797,10 @@ class TestManager:
         try:
             return self.stopped is False
         finally:
-            self.logger.info(
-                "keep_polling took {} nanoseconds".format(
-                    get_time_elapsed(api_start)
-                )
+            self.profile_logger.info(
+                "keep_polling completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
             )
 
 

@@ -1,12 +1,11 @@
 import json
-import logging
 import multiprocessing
 import time
 
 import requests
 import snappi
 from flask import Flask, Response, request
-from otg_gnmi.common.utils import init_logging
+from otg_gnmi.common.utils import init_logging, get_current_time
 
 from tests.utils.common import get_mockserver_status
 from tests.utils.settings import MockConfig
@@ -14,8 +13,12 @@ from tests.utils.settings import MockConfig
 app = Flask(__name__)
 CONFIG = MockConfig()
 
-logfile = init_logging('flask')
-flask_logger = logging.getLogger(logfile)
+logfile = 'flask'+'-'+str(get_current_time())+'.log'
+flask_logger = init_logging(
+    'test',
+    'mockserver',
+    logfile
+)
 
 
 @app.route('/status', methods=['GET'])

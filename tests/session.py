@@ -1,9 +1,8 @@
-import logging
 import time
 import grpc
 from otg_gnmi.autogen import gnmi_pb2, gnmi_pb2_grpc
 from tests.utils.settings import GnmiSettings
-from otg_gnmi.common.utils import init_logging, path_from_string, is_none_or_empty # noqa
+from otg_gnmi.common.utils import init_logging, path_from_string, is_none_or_empty, get_current_time # noqa
 import json
 
 '''
@@ -19,8 +18,12 @@ python3 -m tests.session --server 10.72.47.36:50051 --submode 1 --encoding 2 "/p
 class Session(object):
 
     def __init__(self):
-        self.logfile = init_logging('gNMIClient')
-        self.logger = logging.getLogger(self.logfile)
+        self.logfile = 'gNMIClient'+'-'+str(get_current_time())+'.log'
+        self.logger = init_logging(
+            'test',
+            'Session',
+            self.logfile
+        )
         self.options = self.init_options()
         self.channel = self.init_channel()
         self.stub = self.init_stub()

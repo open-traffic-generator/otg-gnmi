@@ -7,7 +7,8 @@ import grpc
 
 from .autogen import gnmi_pb2, gnmi_pb2_grpc
 from .common.ixnutils import TestManager
-from .common.utils import get_subscription_mode_string, get_time_elapsed
+from .common.utils import (get_subscription_mode_string, get_time_elapsed,
+                           init_logging)
 
 
 class ServerOptions(object):
@@ -17,6 +18,8 @@ class ServerOptions(object):
         self.logfile = args.logfile
         self.target_address = "{}:{}".format(
             args.target_host, args.target_port)
+        self.no_stdout = args.no_stdout
+        self.log_level = logging.DEBUG
 
 
 class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
@@ -24,7 +27,23 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
     def __init__(self, args):
         super().__init__()
         self.options = ServerOptions(args)
-        self.logger = logging.getLogger(self.options.logfile)
+        log_stdout = not self.options.no_stdout
+
+        self.logger = init_logging(
+            'gnmi',
+            'gnmi_serv_asyncio',
+            self.options.logfile,
+            self.options.log_level,
+            log_stdout
+        )
+
+        self.profile_logger = init_logging(
+            'profile',
+            'gnmi_serv_asyncio',
+            self.options.logfile,
+            self.options.log_level,
+            log_stdout
+        )
         self.target_address = "{}:{}".format(
             args.target_host, args.target_port)
 
@@ -43,10 +62,10 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             context.set_details('Success!')
             return response
         finally:
-            self.logger.info(
-                "Capabilities took {} nanoseconds".format(
-                    get_time_elapsed(get_capabilities_start)
-                )
+            self.profile_logger.info(
+                "Capabilities completed!", extra={
+                    'nanoseconds':  get_time_elapsed(get_capabilities_start)
+                }
             )
 
     async def Get(self, request, context):
@@ -62,10 +81,10 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             context.set_details('Method not implemented!')
             raise NotImplementedError('Method not implemented!')
         finally:
-            self.logger.info(
-                "Get took {} nanoseconds".format(
-                    get_time_elapsed(get_start)
-                )
+            self.profile_logger.info(
+                "Get completed!", extra={
+                    'nanoseconds':  get_time_elapsed(get_start)
+                }
             )
 
     async def Set(self, request, context):
@@ -80,10 +99,10 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             context.set_details('Method not implemented!')
             raise NotImplementedError('Method not implemented!')
         finally:
-            self.logger.info(
-                "Set took {} nanoseconds".format(
-                    get_time_elapsed(set_start)
-                )
+            self.profile_logger.info(
+                "Set completed!", extra={
+                    'nanoseconds':  get_time_elapsed(set_start)
+                }
             )
 
     async def Subscribe(self, request_iterator, context):
@@ -162,8 +181,8 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
             context.set_details('Success!')
 
         finally:
-            self.logger.info(
-                "Subscribe took {} nanoseconds".format(
-                    get_time_elapsed(subscribe_start)
-                )
+            self.profile_logger.info(
+                "Subscribe completed!", extra={
+                    'nanoseconds':  get_time_elapsed(subscribe_start)
+                }
             )
