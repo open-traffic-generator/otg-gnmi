@@ -12,13 +12,13 @@ if __name__ == '__main__':
                         type=int)
     parser.add_argument('--app-mode', help='target Application mode)',
                         choices=['ixnetwork', 'athena'],
-                        default='ixnetwork',
+                        default='athena',
                         type=str)
     parser.add_argument('--target-host', help='target host address',
-                        default='localhost',
+                        default='10.74.47.38',
                         )
     parser.add_argument('--target-port', help='target port number',
-                        default=11020,
+                        default=30004,
                         type=int)
     parser.add_argument('--unittest', help='set to true if running unit test',
                         action='store_true')

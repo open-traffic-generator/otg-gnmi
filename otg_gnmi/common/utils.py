@@ -151,4 +151,4 @@ def get_subscription_mode_string(mode):
 def get_time_elapsed(start):
     end = datetime.datetime.now()
     elapsed = end - start
-    return elapsed.total_seconds() * 10 ** 9
+    return elapsed.total_seconds() * 10 ** 3

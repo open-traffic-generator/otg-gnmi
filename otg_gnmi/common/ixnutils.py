@@ -15,7 +15,7 @@ from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
                     get_time_elapsed, gnmi_path_to_string, init_logging)
 
-POLL_INTERVAL = 2
+POLL_INTERVAL = 0.01
 
 g_RequestId = -1
 
@@ -25,9 +25,22 @@ def get_request_id():
     g_RequestId += 1
 
 
+class lockless:
+    def __init__(self):
+        pass
+
+    def acquire(self):
+        pass
+
+    def release(self):
+        pass
+
+
 class SubscriptionReq:
-    def __init__(self, subscriptionList, session, subscription):
+    def __init__(self, profile_logger, subscriptionList, session, subscription):
         # Assign subscriptionList properties
+        self.profile_logger = profile_logger
+        api_start = datetime.datetime.now()
         self.client = session
         self.parent_encoding = subscriptionList.encoding
         self.parent_mode = subscriptionList.mode
@@ -37,10 +50,21 @@ class SubscriptionReq:
         self.mode = subscription.mode
         self.gnmipath = subscription.path
         self.stringpath, self.name = gnmi_path_to_string(subscription)
+        self.profile_logger.info(
+                "XXXX completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
+            )
+        api_start = datetime.datetime.now()
         self.type = get_subscription_type(self.stringpath)
         self.callback, self.deserializer = TestManager.Instance().get_callback(
             self.stringpath
         )
+        self.profile_logger.info(
+                "AAAA completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
+            )
         self.sample_interval = subscription.sample_interval
         self.last_polled = None
         self.last_yield = None
@@ -173,7 +197,8 @@ class TestManager:
                     self.flow_subscriptions = {}
                     self.protocol_subscriptions = {}
 
-                    self.lock = Lock()
+                    self.lock = lockless()
+                    # self.lock = Lock()
                     self.get_api()
                     self.start_worker_threads()
 
@@ -272,7 +297,7 @@ class TestManager:
             self.logger.info('Terminate connection')
             self.stop_worker_threads()
             await self.deregister_subscription(request_iterator)
-            self.dump_all_subscription()
+            # self.dump_all_subscription()
         finally:
             self.profile_logger.info(
                 "terminate completed!", extra={
@@ -292,7 +317,7 @@ class TestManager:
                 try:
                     await asyncio.wait_for(
                         self.parse_requests(request_iterator, requests),
-                        timeout=1.0
+                        timeout=0.05
                     )
                 except asyncio.TimeoutError as ex:
                     self.logger.error(
@@ -426,11 +451,16 @@ class TestManager:
         api_start = datetime.datetime.now()
         try:
             global POLL_INTERVAL
+            flow_subscriptions_count = 0
             self.logger.info('Started flow stats collection thread')
             while self.stopped is False:
-                if len(self.flow_subscriptions) > 0:
+                flow_subscriptions_count = len(self.flow_subscriptions)
+                if flow_subscriptions_count > 0:
                     self.collect_stats(self.flow_subscriptions, 'Flow')
-                time.sleep(POLL_INTERVAL)
+                    if len(self.flow_subscriptions) == flow_subscriptions_count: # noqa
+                        time.sleep(POLL_INTERVAL)
+                if self.unittest:
+                    time.sleep(POLL_INTERVAL)
         finally:
             self.profile_logger.info(
                 "collect_flow_stats completed!", extra={
@@ -442,11 +472,16 @@ class TestManager:
         api_start = datetime.datetime.now()
         try:
             global POLL_INTERVAL
+            port_subscriptions_count = 0
             self.logger.info('Started port stats collection thread')
             while self.stopped is False:
-                if len(self.port_subscriptions) > 0:
+                port_subscriptions_count = len(self.port_subscriptions)
+                if port_subscriptions_count > 0:
                     self.collect_stats(self.port_subscriptions, 'Port')
-                time.sleep(POLL_INTERVAL)
+                    if len(self.port_subscriptions) == port_subscriptions_count: # noqa
+                        time.sleep(POLL_INTERVAL)
+                if self.unittest:
+                    time.sleep(POLL_INTERVAL)
         finally:
             self.profile_logger.info(
                 "collect_port_stats completed!", extra={
@@ -458,12 +493,16 @@ class TestManager:
         api_start = datetime.datetime.now()
         try:
             global POLL_INTERVAL
-            time.sleep(POLL_INTERVAL)
+            protocol_subscriptions_count = 0
             self.logger.info('Started protocol stats collection thread')
             while self.stopped is False:
-                if len(self.protocol_subscriptions) > 0:
+                protocol_subscriptions_count = len(self.protocol_subscriptions)
+                if protocol_subscriptions_count > 0:
                     self.collect_stats(self.protocol_subscriptions, 'Protocol')
-                time.sleep(POLL_INTERVAL)
+                    if len(self.protocol_subscriptions) == protocol_subscriptions_count: # noqa
+                        time.sleep(POLL_INTERVAL)
+                if self.unittest:
+                    time.sleep(POLL_INTERVAL)
         finally:
             self.profile_logger.info(
                 "collect_protocol_stats completed!", extra={
@@ -493,7 +532,7 @@ class TestManager:
                 global POLL_INTERVAL
                 POLL_INTERVAL = POLL_INTERVAL * 2
             else:
-                self.api = snappi.api(location=target)
+                self.api = snappi.api(location=target, verify=False)
             self.logger.info('Initialized snappi...')
             return self.api
         finally:
@@ -673,9 +712,9 @@ class TestManager:
     async def register_subscription(self, session):
         api_start = datetime.datetime.now()
         try:
-            self.lock.acquire()
             self.logger.info(
                 'Register Subscription for %s elements', len(session.requests))
+            self.lock.acquire()
             try:
                 for request in session.requests:
                     if request is None:
@@ -683,7 +722,7 @@ class TestManager:
                     session.mode = request.subscribe.mode
                     for subscription in request.subscribe.subscription:
                         sub = SubscriptionReq(
-                            request.subscribe, session, subscription)
+                            self.profile_logger, request.subscribe, session, subscription)
                         sub.client.register_path(sub.stringpath)
                         sub.encoding = request.subscribe.encoding
                         self.logger.info(
@@ -701,7 +740,7 @@ class TestManager:
                 self.logger.error('Exception: %s', str(ex))
                 self.logger.error('Exception: ', exc_info=True)
 
-            self.dump_all_subscription()
+            # self.dump_all_subscription()
             self.lock.release()
         finally:
             self.profile_logger.info(
@@ -713,11 +752,11 @@ class TestManager:
     async def deregister_subscription(self, session):
         api_start = datetime.datetime.now()
         try:
-            self.lock.acquire()
-
             self.logger.info(
                 'Deregister Subscription for %s elements', len(
                     session.requests))
+            self.lock.acquire()
+
             try:
                 for request in session.requests:
                     if request is None:
@@ -739,7 +778,7 @@ class TestManager:
                 self.logger.error('Exception: %s', str(ex))
                 self.logger.error('Exception: ', exc_info=True)
 
-            self.dump_all_subscription()
+            # self.dump_all_subscription()
             self.lock.release()
             # self.stop_worker_threads()
 
