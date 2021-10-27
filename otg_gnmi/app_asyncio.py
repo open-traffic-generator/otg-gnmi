@@ -8,7 +8,7 @@ from grpc_reflection.v1alpha import reflection
 
 from .autogen import gnmi_pb2, gnmi_pb2_grpc
 from .common.ixnutils import TestManager
-from .common.utils import init_logging
+from .common.utils import init_logging, get_current_time
 from .gnmi_serv_asyncio import AsyncGnmiService
 
 server = None
@@ -22,14 +22,14 @@ class AsyncServer:
 
         # https://github.com/grpc/grpc/issues/23070
         log_stdout = not args.no_stdout
-        args.logfile = init_logging(
+        args.logfile = args.logfile+'-'+str(get_current_time())+'.log'
+        server_logger = init_logging(
+            'gnmi',
+            'app_asyncio',
             args.logfile,
             logging.DEBUG,
             log_stdout
         )
-        server_logger = logging.getLogger(
-            args.logfile)
-
         signal.signal(signal.SIGTERM, sighandler)
 
         grpc_async.init_grpc_aio()

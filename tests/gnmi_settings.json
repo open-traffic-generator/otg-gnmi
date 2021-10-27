@@ -1,7 +1,7 @@
 {
     "quiet": "true",
     "verbose": "count",
-    "server": "127.0.0.1:50052",
+    "server": "127.0.0.1:50030",
     "username": "admin",
     "password": "admin",
     "secure": false,
@@ -32,12 +32,17 @@
         "/bgpv6_metrics[name=BGPv6-1]",
         "/bgpv6_metrics[name=BGPv6-2]"
     ],
+    "isis_metrics": [
+        "/isis_metrics[name=ISIS-1]",
+        "/isis_metrics[name=ISIS-2]"
+    ],
     "paths" : [
         "/port_metrics[name=P1]",
         "/port_metrics[name=P2]",
         "/flow_metrics[name=F1]",
         "/bgpv4_metrics[name=BGPv4-1]",
-        "/bgpv6_metrics[name=BGPv6-1]"
+        "/bgpv6_metrics[name=BGPv6-1]",
+        "/isis_metrics[name=ISIS-1]"
     ],
     "prefix": "",
     "qos": "",

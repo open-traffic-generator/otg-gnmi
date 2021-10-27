@@ -1,38 +1,6 @@
 import pytest
-from tests.utils.common import init_gnmi_with_mock_server, get, set, capabilities, subscribe # noqa
+from tests.utils.common import init_gnmi_with_mock_server, get, set, capabilities, subscribe, change_mockserver_status# noqa
 import json
-
-
-@pytest.mark.asyncio
-async def test_gnmi_server_set_api(snappiserver,
-                                   gnmi_server):
-    gnmi_api = init_gnmi_with_mock_server(200)
-
-    found_err = False
-    expected_err = 'Method not implemented!'
-    try:
-        await set(gnmi_api)
-    except Exception as e:
-        assert str(e) == expected_err
-        found_err = True
-
-    assert found_err, 'Exception should be raised'
-
-
-@pytest.mark.asyncio
-async def test_gnmi_server_get_api(snappiserver,
-                                   gnmi_server):
-    gnmi_api = init_gnmi_with_mock_server(200)
-
-    found_err = False
-    expected_err = 'Method not implemented!'
-    try:
-        await get(gnmi_api)
-    except Exception as e:
-        assert str(e) == expected_err
-        found_err = True
-
-    assert found_err, 'Exception should be raised'
 
 
 @pytest.mark.asyncio
@@ -103,6 +71,10 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
             'session_flap_count': 0,
             'routes_advertised': 1000,
             'routes_received': 500
+        },
+        {
+            'name': 'ISIS-1',
+            'l1_sessions_up': 0
         }
     ]
 
@@ -137,12 +109,15 @@ async def test_gnmi_server_subscribe_api_400(snappiserver,
         "P2: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
         "F1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
         "BGPv4-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
-        "BGPv6-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})"
+        "BGPv6-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
+        "ISIS-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})"
     ]
 
     for res in responses:
         assert res.HasField('error')
         assert res.error.message in expected_error_msg
+
+    change_mockserver_status(200, False)
 
 
 @pytest.mark.asyncio
@@ -156,12 +131,15 @@ async def test_gnmi_server_subscribe_api_500(snappiserver,
         "P2: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
         "F1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
         "BGPv4-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
-        "BGPv6-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})"
+        "BGPv6-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
+        "ISIS-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})"
     ]
 
     for res in responses:
         assert res.HasField('error')
         assert res.error.message in expected_error_msg
+
+    change_mockserver_status(200, False)
 
 
 @pytest.mark.asyncio
@@ -175,9 +153,44 @@ async def test_gnmi_server_subscribe_api_501(snappiserver,
         "P2: (501, {\'errors\': [\'get_metrics is not implemented\']})",
         "F1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
         "BGPv4-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
-        "BGPv6-1: (501, {\'errors\': [\'get_metrics is not implemented\']})"
+        "BGPv6-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
+        "ISIS-1: (501, {\'errors\': [\'get_metrics is not implemented\']})"
     ]
 
     for res in responses:
         assert res.HasField('error')
         assert res.error.message in expected_error_msg
+
+    change_mockserver_status(200, False)
+
+
+@pytest.mark.asyncio
+async def test_gnmi_server_set_api(snappiserver,
+                                   gnmi_server):
+    gnmi_api = init_gnmi_with_mock_server(200)
+
+    found_err = False
+    expected_err = 'Method not implemented!'
+    try:
+        await set(gnmi_api)
+    except Exception as e:
+        assert str(e) == expected_err
+        found_err = True
+
+    assert found_err, 'Exception should be raised'
+
+
+@pytest.mark.asyncio
+async def test_gnmi_server_get_api(snappiserver,
+                                   gnmi_server):
+    gnmi_api = init_gnmi_with_mock_server(200)
+
+    found_err = False
+    expected_err = 'Method not implemented!'
+    try:
+        await get(gnmi_api)
+    except Exception as e:
+        assert str(e) == expected_err
+        found_err = True
+
+    assert found_err, 'Exception should be raised'

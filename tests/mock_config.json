@@ -36,5 +36,15 @@
             "name"          : "BGPv6-2",
             "session_state" : "up"            
         }
+    ],
+    "isis_metrics": [
+        {
+            "name"          : "ISIS-1",
+            "l1_sessions_up" : 0
+        },
+        {
+            "name"          : "ISIS-2",
+            "l1_sessions_up" : 0          
+        }
     ] 
 }
