@@ -58,7 +58,7 @@ def init_logging(
         log_format = '{"level":"%(levelname)s","ctx":"' + ctx + '","api":"%(funcName)s","choice":"%(choice)s","scope":"' + scope + '","nanoseconds":"%(nanoseconds)s","ts":"%(asctime)s.%(msecs)03dZ","msg":"%(message)s"}' # noqa
     else:
         log_format = '{"level":"%(levelname)s","ctx":"' + ctx + '","scope":"' + scope + '","api":"%(funcName)s","ts":"%(asctime)s.%(msecs)03dZ","msg":"%(message)s"}' # noqa
-            
+        
     formatter = CustomFormatter(log_format, "%Y-%m-%dT%H:%M:%S")
     fileHandler = logging.FileHandler(logfile, mode='a')
     fileHandler.setFormatter(formatter)
