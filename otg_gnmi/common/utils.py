@@ -42,7 +42,12 @@ def get_current_time():
     return current_utc
 
 
-def init_logging(ctx, scope, logfile, level=logging.DEBUG, log_stdout=False):
+def init_logging(
+        ctx,
+        scope,
+        logfile,
+        level=logging.DEBUG,
+        log_stdout=False):
     logger_name = ctx + '_' + scope
     logger = logging.getLogger(logger_name)
     logs_dir = os.path.join(os.path.curdir, 'logs')
@@ -50,20 +55,10 @@ def init_logging(ctx, scope, logfile, level=logging.DEBUG, log_stdout=False):
         os.makedirs(logs_dir)
     logfile = os.path.join(logs_dir, logfile)
     if ctx in ['profile']:
-        log_format = "{'level': '%(levelname)s',\
-            'ctx': '" + ctx + "',\
-            'api': '%(funcName)s',\
-            'scope': '" + scope + "', \
-            'nanoseconds': '%(nanoseconds)s',\
-            'ts':'%(asctime)s.%(msecs)03dZ',\
-            'msg': '%(message)s'}"
+        log_format = '{"level":"%(levelname)s","ctx":"' + ctx + '","api":"%(funcName)s","choice":"%(choice)s","scope":"' + scope + '","nanoseconds":"%(nanoseconds)s","ts":"%(asctime)s.%(msecs)03dZ","msg":"%(message)s"}' # noqa
     else:
-        log_format = "{'level': '%(levelname)s',\
-            'ctx': '" + ctx + "',\
-            'scope': '" + scope + "', \
-            'api': '%(funcName)s',\
-            'ts':'%(asctime)s.%(msecs)03dZ',\
-            'msg': '%(message)s'}"
+        log_format = '{"level":"%(levelname)s","ctx":"' + ctx + '","scope":"' + scope + '","api":"%(funcName)s","ts":"%(asctime)s.%(msecs)03dZ","msg":"%(message)s"}' # noqa
+            
     formatter = CustomFormatter(log_format, "%Y-%m-%dT%H:%M:%S")
     fileHandler = logging.FileHandler(logfile, mode='a')
     fileHandler.setFormatter(formatter)

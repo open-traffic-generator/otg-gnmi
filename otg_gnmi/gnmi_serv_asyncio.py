@@ -150,8 +150,29 @@ class AsyncGnmiService(gnmi_pb2_grpc.gNMIServicer):
                         session)
                     for response in responses:
                         if response is not None:
-                            self.logger.info(
-                                'Response[%s]: %s', counter, response)
+                            if response.HasField('update'):
+                                response_str = str(
+                                    response.SerializeToString())
+                                response_str = '{' + response_str.split(
+                                        '{', 1
+                                    )[1][:-1]
+                                response_str = response_str.replace(
+                                    "\\n", "")
+                                self.logger.info(
+                                    'Response[%s]: update - %s',
+                                    counter,
+                                    eval(response_str)
+                                )
+                            elif response.HasField('sync_response'):
+                                self.logger.info(
+                                    'Response[%s]: update - %s',
+                                    counter,
+                                    response.sync_response
+                                )
+                            else:
+                                self.logger.info(
+                                    'Response[%s]: %s', counter, response
+                                )
                             yield response
                     counter = counter + 1
                     if (
