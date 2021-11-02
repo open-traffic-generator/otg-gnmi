@@ -3,7 +3,6 @@
 DOCKER_HUB_USERNAME=""
 DOCKER_HUB_ACCESS_TOKEN=""
 DOCKERHUB_IMAGE=""
-EXPERIMENT=""
 
 # Avoid warnings for non-interactive apt-get install
 export DEBIAN_FRONTEND=noninteractive
@@ -24,34 +23,35 @@ dockerhub_image_exists() {
 publish() {
     DOCKER_HUB_USERNAME=${1}
     DOCKER_HUB_ACCESS_TOKEN=${2}
-    EXPERIMENT=${3}
 
     TAG=$(head ./version | cut -d' ' -f1)
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-    if [ ${EXPERIMENT} = true ]
-    then 
-        echo "gitHub secret - EXPERMINET Flag is True"
-        DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/experiments-gnmi:${TAG}"
-    else
-        echo "gitHub secret - EXPERMINET Flag is False"
+    if [ ${BRANCH} = 'main' ]
+    then
+        echo "Main Branch ..."
         DOCKERHUB_IMAGE="${DOCKER_HUB_USERNAME}/otg-gnmi-server:${TAG}"
         dockerhub_image_exists "${DOCKERHUB_IMAGE}"
+        echo "Publishing image to DockerHub..."
+        docker tag otg-gnmi-server "${DOCKERHUB_IMAGE}"
+
+        docker login -p ${DOCKER_HUB_ACCESS_TOKEN} -u ${DOCKER_HUB_USERNAME} \
+        && docker push "${DOCKERHUB_IMAGE}" \
+        && docker logout ${DOCKER_HUB_USERNAME}
+        echo "${DOCKERHUB_IMAGE} published in DockerHub..."
+
+
+        echo "Deleting local docker images..."
+        docker rmi -f "otg-gnmi-server" "${DOCKERHUB_IMAGE}"> /dev/null 2>&1 || true
+
+        echo "Verifying image from DockerHub..."
+        verify_dockerhub_images "${DOCKERHUB_IMAGE}"
+    else 
+        echo "Non Main Branch - ${BRANCH} ..."
+
+        echo "Deleting local docker images..."
+        docker rmi -f "otg-gnmi-server"> /dev/null 2>&1 || true
     fi
-
-    echo "Publishing image to DockerHub..."
-    docker tag otg-gnmi-server "${DOCKERHUB_IMAGE}"
-
-    docker login -p ${DOCKER_HUB_ACCESS_TOKEN} -u ${DOCKER_HUB_USERNAME} \
-    && docker push "${DOCKERHUB_IMAGE}" \
-    && docker logout ${DOCKER_HUB_USERNAME}
-    echo "${DOCKERHUB_IMAGE} published in DockerHub..."
-
-
-    echo "Deleting local docker images..."
-    docker rmi -f "otg-gnmi-server" "${DOCKERHUB_IMAGE}"> /dev/null 2>&1 || true
-
-    echo "Verifying image from DockerHub..."
-    verify_dockerhub_images "${DOCKERHUB_IMAGE}"
 }
 
 verify_dockerhub_images() {
