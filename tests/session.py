@@ -169,7 +169,11 @@ class Session(object):
                 paths.extend(self.options.bgpv6_metrics)
             if type == 'isis_metrics':
                 paths.extend(self.options.isis_metrics)
-
+            if type == 'ipv4_neighbors':
+                paths.extend(self.options.ipv4_neighbors)
+            if type == 'ipv6_neighbors':
+                paths.extend(self.options.ipv6_neighbors)
+                
         for path in paths:
             mypath = path_from_string(path)
             self.logger.info('Sending SubscribeRequest: %s: %s', path, mypath)
@@ -280,3 +284,5 @@ if __name__ == '__main__':
     sessoin.subscribe('bgpv4_metrics')
     sessoin.subscribe('bgpv6_metrics')
     sessoin.subscribe('isis_metrics')
+    sessoin.subscribe('ipv4_neighbors')
+    sessoin.subscribe('ipv6_neighbors')

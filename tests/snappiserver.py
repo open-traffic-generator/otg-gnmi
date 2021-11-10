@@ -167,6 +167,58 @@ def get_metrics():
                         headers={'Content-Type': 'application/json'})
 
 
+@app.route('/results/states', methods=['POST'])
+def get_states():
+    status = get_mockserver_status()
+    global CONFIG
+    if status in ["200", "200-warning"]:
+        api = snappi.api()
+        states_request = api.states_request()
+        states_request.deserialize(request.data.decode('utf-8'))
+        flask_logger.info('get_status Request : [%s]', states_request)
+        
+        states_response = api.states_response()
+        if states_request.choice == 'ipv4_neighbors':
+            states_response.choice = 'ipv4_neighbors'
+            for state in CONFIG.ipv4_neighbors:
+                states_response.ipv4_neighbors.state(
+                    ethernet_name=state['ethernet_name'],
+                    ipv4_address=state['ipv4_address'],
+                    link_layer_address="aa:bb:cc:dd:ee:ff"
+                )
+        elif states_request.choice == 'ipv6_neighbors':
+            states_response.choice = 'ipv6_neighbors'
+            for state in CONFIG.ipv6_neighbors:
+                states_response.ipv6_neighbors.state(
+                    ethernet_name=state['ethernet_name'],
+                    ipv6_address=state['ipv6_address'],
+                    link_layer_address="aa:bb:cc:dd:ee:ff"
+                )
+
+        flask_logger.info('get_status Responese : [%s]', states_response)
+
+        return Response(states_response.serialize(),
+                        mimetype='application/json',
+                        status=200)
+    elif status == "400":
+        return Response(status=400,
+                        response=json.dumps(
+                            {'errors': ['mock 400 get_states error']}),
+                        headers={'Content-Type': 'application/json'})
+    elif status == "500":
+        return Response(status=500,
+                        response=json.dumps(
+                            {'errors': ['mock 500 get_states error']}),
+                        headers={'Content-Type': 'application/json'})
+    else:
+        return Response(status=501,
+                        response=json.dumps(
+                            {'errors': ['get_states is not implemented']}),
+                        headers={'Content-Type': 'application/json'})
+
+
+
+
 @app.after_request
 def after_request(resp):
     print(request.method, request.url, ' -> ', resp.status)

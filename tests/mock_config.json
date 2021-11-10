@@ -46,5 +46,29 @@
             "name"          : "ISIS-2",
             "l1_sessions_up" : 0          
         }
+    ],
+    "ipv4_neighbors": [
+        {
+            "ethernet_name"  : "p1d1eth1",
+            "ipv4_address" : "100.100.100.2",
+            "link_layer_address" : "aa:bb:cc:dd:ee:ff"
+        },
+        {
+            "ethernet_name"  : "p2d1eth1",
+            "ipv4_address" : "100.100.100.3",
+            "link_layer_address" : "aa:bb:cc:dd:ee:ff"        
+        }
+    ],
+    "ipv6_neighbors": [
+        {
+            "ethernet_name"  : "p1d2eth1",
+            "ipv6_address" : "00:00:00:aa::2",
+            "link_layer_address" : "aa:bb:cc:dd:ee:ff"
+        },
+        {
+            "ethernet_name"  : "p2d2eth1",
+            "ipv6_address" : "00:00:00:aa::3",
+            "link_layer_address" : "aa:bb:cc:dd:ee:ff"          
+        }
     ] 
 }

@@ -37,7 +37,12 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
     expected_names = [
         "P1",
         "P2",
-        "F1"
+        "F1",
+        'BGPv4-1',
+        'BGPv6-1',
+        'ISIS-1',
+        "p1d1eth1",
+        "p1d2eth1"
     ]
 
     expected_stats = [
@@ -75,6 +80,16 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
         {
             'name': 'ISIS-1',
             'l1_sessions_up': 0
+        },
+        {
+            'ethernet_name': 'p1d1eth1',
+            'ipv4_address': '100.100.100.2',
+            'link_layer_address' : 'aa:bb:cc:dd:ee:ff'
+        },
+        {
+            'ethernet_name': 'p1d2eth1',
+            'ipv6_address': '00:00:00:aa::2',
+            'link_layer_address' : 'aa:bb:cc:dd:ee:ff'
         }
     ]
 
@@ -110,7 +125,9 @@ async def test_gnmi_server_subscribe_api_400(snappiserver,
         "F1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
         "BGPv4-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
         "BGPv6-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
-        "ISIS-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})"
+        "ISIS-1: (400, {\'errors\': [\'mock 400 get_metrics error\']})",
+        "p1d1eth1: (400, {\'errors\': [\'mock 400 get_states error\']})",
+        "p1d2eth1: (400, {\'errors\': [\'mock 400 get_states error\']})"
     ]
 
     for res in responses:
@@ -132,7 +149,9 @@ async def test_gnmi_server_subscribe_api_500(snappiserver,
         "F1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
         "BGPv4-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
         "BGPv6-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
-        "ISIS-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})"
+        "ISIS-1: (500, {\'errors\': [\'mock 500 get_metrics error\']})",
+        "p1d1eth1: (500, {\'errors\': [\'mock 500 get_states error\']})",
+        "p1d2eth1: (500, {\'errors\': [\'mock 500 get_states error\']})"
     ]
 
     for res in responses:
@@ -154,7 +173,9 @@ async def test_gnmi_server_subscribe_api_501(snappiserver,
         "F1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
         "BGPv4-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
         "BGPv6-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
-        "ISIS-1: (501, {\'errors\': [\'get_metrics is not implemented\']})"
+        "ISIS-1: (501, {\'errors\': [\'get_metrics is not implemented\']})",
+        "p1d1eth1: (501, {\'errors\': [\'get_states is not implemented\']})",
+        "p1d2eth1: (501, {\'errors\': [\'get_states is not implemented\']})"
     ]
 
     for res in responses:

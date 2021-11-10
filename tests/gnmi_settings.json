@@ -36,13 +36,23 @@
         "/isis_metrics[name=ISIS-1]",
         "/isis_metrics[name=ISIS-2]"
     ],
+    "ipv4_neighbors": [
+        "/ipv4_neighbors[ethernet_name=p1d1eth1]",
+        "/ipv4_neighbors[ethernet_name=p2d1eth1]"
+    ],
+    "ipv6_neighbors": [
+        "/ipv6_neighbors[ethernet_name=p1d2eth1]",
+        "/ipv6_neighbors[ethernet_name=p2d2eth1]"
+    ],
     "paths" : [
         "/port_metrics[name=P1]",
         "/port_metrics[name=P2]",
         "/flow_metrics[name=F1]",
         "/bgpv4_metrics[name=BGPv4-1]",
         "/bgpv6_metrics[name=BGPv6-1]",
-        "/isis_metrics[name=ISIS-1]"
+        "/isis_metrics[name=ISIS-1]",
+        "/ipv4_neighbors[ethernet_name=p1d1eth1]",
+        "/ipv6_neighbors[ethernet_name=p1d2eth1]"
     ],
     "prefix": "",
     "qos": "",
