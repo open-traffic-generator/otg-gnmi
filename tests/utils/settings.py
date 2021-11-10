@@ -136,6 +136,9 @@ class MockConfig(JsonSerializer):
         self.flow_metrics = None
         self.bgpv4_metrics = None
         self.bgpv6_metrics = None
+        self.isis_metrics = None
+        self.ipv4_neighbors = None
+        self.ipv6_neighbors = None
         self.load_from_settings_file()
 
 

@@ -25,6 +25,8 @@ class RequestPathBase():
     BASE_BGPv4_PATH = r'/bgpv4_metrics'
     BASE_BGPv6_PATH = r'/bgpv6_metrics'
     BASE_ISIS_PATH = r'/isis_metrics'
+    BASE_NEIGHBORv4_PATH = r'/ipv4_neighbors'
+    BASE_NEIGHBORv6_PATH = r'/ipv6_neighbors'
 
 
 class RequestType(Enum):
@@ -32,6 +34,7 @@ class RequestType(Enum):
     PORT = 1
     FLOW = 2
     PROTOCOL = 3
+    NEIGHBOR = 4
 
 
 def get_current_time():
@@ -131,6 +134,10 @@ def get_subscription_type(path):
         return RequestType.PORT
     if path.find(RequestPathBase.BASE_FLOW_PATH) != -1:
         return RequestType.FLOW
+    if path.find(RequestPathBase.BASE_NEIGHBORv4_PATH) != -1:
+        return RequestType.NEIGHBOR
+    if path.find(RequestPathBase.BASE_NEIGHBORv6_PATH) != -1:
+        return RequestType.NEIGHBOR
     return RequestType.PROTOCOL
 
 

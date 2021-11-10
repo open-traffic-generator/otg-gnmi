@@ -171,6 +171,7 @@ class TestManager:
                     self.client_sessions = {}
                     self.port_subscriptions = {}
                     self.flow_subscriptions = {}
+                    self.neighbor_subscriptions = {}
                     self.protocol_subscriptions = {}
 
                     self.lock = Lock()
@@ -233,6 +234,9 @@ class TestManager:
             self.flow_stats_thread = Thread(
                 target=self.collect_flow_stats, args=[])
             self.flow_stats_thread.start()
+            self.neighbor_stats_thread = Thread(
+                target=self.collect_neighbor_states, args=[])
+            self.neighbor_stats_thread.start()
             self.port_stats_thread = Thread(
                 target=self.collect_port_stats, args=[])
             self.port_stats_thread.start()
@@ -254,6 +258,8 @@ class TestManager:
             self.stopped = True
             if hasattr(self, 'flow_stats_thread'):
                 self.flow_stats_thread.join()
+            if hasattr(self, 'neighbor_stats_thread'):
+                self.neighbor_stats_thread.join()
             if hasattr(self, 'port_stats_thread'):
                 self.port_stats_thread.join()
             if hasattr(self, 'protocol_stats_thread'):
@@ -352,6 +358,10 @@ class TestManager:
                 return self.get_port_metric, otg_pb2.PortMetric()
             if path.find(RequestPathBase.BASE_FLOW_PATH) != -1:
                 return self.get_flow_metric, otg_pb2.FlowMetric()
+            if path.find(RequestPathBase.BASE_NEIGHBORv4_PATH) != -1:
+                return self.get_ipv4_neighbor_state, otg_pb2.Neighborsv4State()
+            if path.find(RequestPathBase.BASE_NEIGHBORv6_PATH) != -1:
+                return self.get_ipv6_neighbor_state, otg_pb2.Neighborsv6State()
             if path.find(RequestPathBase.BASE_BGPv4_PATH) != -1:
                 return self.get_bgpv4_metric, otg_pb2.Bgpv4Metric()
             if path.find(RequestPathBase.BASE_BGPv6_PATH) != -1:
@@ -396,13 +406,22 @@ class TestManager:
                 metrics = sub.callback(names)
                 # self.logger.info('Collected %s stats for %s', meta, metrics)
                 for metric in metrics:
-                    if metric.name not in name_to_sub_reverse_map:
-                        continue
-                    sub = name_to_sub_reverse_map[metric.name]
-                    sub.prev_stats = sub.curr_stats
-                    sub.curr_stats = metric
-                    sub.compute_delta()
-                    sub.encode_stats(metric.name)
+                    if hasattr(metric, 'name'):
+                        if metric.name not in name_to_sub_reverse_map:
+                            continue
+                        sub = name_to_sub_reverse_map[metric.name]
+                        sub.prev_stats = sub.curr_stats
+                        sub.curr_stats = metric
+                        sub.compute_delta()
+                        sub.encode_stats(metric.name)
+                    elif hasattr(metric, 'ethernet_name'):
+                        if metric.ethernet_name not in name_to_sub_reverse_map:
+                            continue
+                        sub = name_to_sub_reverse_map[metric.ethernet_name]
+                        sub.prev_stats = sub.curr_stats
+                        sub.curr_stats = metric
+                        sub.compute_delta()
+                        sub.encode_stats(metric.ethernet_name)
 
             except Exception as ex:
                 for key in subscriptions:
@@ -437,6 +456,23 @@ class TestManager:
                     'nanoseconds':  get_time_elapsed(api_start)
                 }
             )
+
+    def collect_neighbor_states(self):
+        api_start = datetime.datetime.now()
+        try:
+            global POLL_INTERVAL
+            self.logger.info('Started neighbor states collection thread')
+            while self.stopped is False:
+                if len(self.neighbor_subscriptions) > 0:
+                    self.collect_stats(self.neighbor_subscriptions, 'Neighbor')
+                time.sleep(POLL_INTERVAL)
+        finally:
+            self.profile_logger.info(
+                "collect_neighbor_states completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
+            )
+
 
     def collect_port_stats(self):
         api_start = datetime.datetime.now()
@@ -583,6 +619,39 @@ class TestManager:
                 }
             )
 
+    def get_ipv4_neighbor_state(self, eth_names, stat_names=None):
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.states_request()
+            req.choice = "ipv4_neighbors"
+            req.ipv4_neighbors.ethernet_names = eth_names
+            res = api.get_states(req)
+            return res.ipv4_neighbors
+        finally:
+            self.profile_logger.info(
+                "get_ipv4_neighbor_state completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
+            )
+
+    def get_ipv6_neighbor_state(self, eth_names, stat_names=None):
+        api_start = datetime.datetime.now()
+        try:
+            api = self.get_api()
+            req = api.states_request()
+            req.choice = "ipv6_neighbors"
+            req.ipv6_neighbors.ethernet_names = eth_names
+            res = api.get_states(req)
+            return res.ipv6_neighbors
+        finally:
+            self.profile_logger.info(
+                "get_ipv6_neighbor_state completed!", extra={
+                    'nanoseconds':  get_time_elapsed(api_start)
+                }
+            )
+
+
     def create_update_response(self, encoding, stats_name, stats):
         api_start = datetime.datetime.now()
         try:
@@ -656,6 +725,14 @@ class TestManager:
                     '\t\tSubscriptions: %s, Name: %s', path, sub.name)
 
             self.logger.info(
+                'Neighbor Subscriptions: total subscription = %s', len(
+                    self.neighbor_subscriptions))
+            for path in self.neighbor_subscriptions:
+                sub = self.neighbor_subscriptions[path]
+                self.logger.info(
+                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+
+            self.logger.info(
                 'Protocol Subscriptions: total subscription = %s',
                 len(self.protocol_subscriptions)
             )
@@ -692,6 +769,8 @@ class TestManager:
                             self.port_subscriptions[sub.stringpath] = sub
                         elif sub.type == RequestType.FLOW:
                             self.flow_subscriptions[sub.stringpath] = sub
+                        elif sub.type == RequestType.NEIGHBOR:
+                            self.neighbor_subscriptions[sub.stringpath] = sub
                         elif sub.type == RequestType.PROTOCOL:
                             self.protocol_subscriptions[sub.stringpath] = sub
                         else:
@@ -733,6 +812,8 @@ class TestManager:
                             self.port_subscriptions.pop(sub.stringpath)
                         elif sub.type == RequestType.FLOW:
                             self.flow_subscriptions.pop(sub.stringpath)
+                        elif sub.type == RequestType.NEIGHBOR:
+                            self.neighbor_subscriptions.pop(sub.stringpath)
                         elif sub.type == RequestType.PROTOCOL:
                             self.protocol_subscriptions.pop(sub.stringpath)
             except Exception as ex:
@@ -774,6 +855,9 @@ class TestManager:
 
             for key in self.flow_subscriptions:
                 publish(key, self.flow_subscriptions, session, results, 'Flow')
+
+            for key in self.neighbor_subscriptions:
+                publish(key, self.neighbor_subscriptions, session, results, 'Neighbor')
 
             for key in self.protocol_subscriptions:
                 publish(key, self.protocol_subscriptions,

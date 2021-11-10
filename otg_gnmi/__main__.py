@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true')
     parser.add_argument('--insecure',
-                        help='disable TSL security, by defualt enabled',
+                        help='disable TSL security, by default enabled',
                         action='store_true')
     parser.add_argument('--server-key',
                         help='path to private key, default is server.key',
