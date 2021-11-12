@@ -84,12 +84,12 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
         {
             'ethernet_name': 'p1d1eth1',
             'ipv4_address': '100.100.100.2',
-            'link_layer_address' : 'aa:bb:cc:dd:ee:ff'
+            'link_layer_address': 'aa:bb:cc:dd:ee:ff'
         },
         {
             'ethernet_name': 'p1d2eth1',
             'ipv6_address': '00:00:00:aa::2',
-            'link_layer_address' : 'aa:bb:cc:dd:ee:ff'
+            'link_layer_address': 'aa:bb:cc:dd:ee:ff'
         }
     ]
 

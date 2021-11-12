@@ -173,7 +173,7 @@ class Session(object):
                 paths.extend(self.options.ipv4_neighbors)
             if type == 'ipv6_neighbors':
                 paths.extend(self.options.ipv6_neighbors)
-                
+
         for path in paths:
             mypath = path_from_string(path)
             self.logger.info('Sending SubscribeRequest: %s: %s', path, mypath)

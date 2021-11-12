@@ -48,10 +48,12 @@ def test_subscribe_isis_metrics(gnmi_server, snappiserver, session):
     result = session.subscribe(['isis_metrics'])
     assert(result is True)
 
+
 def test_subscribe_ipv4_neighbors_states(gnmi_server, snappiserver, session):
     change_mockserver_status(200, False)
     result = session.subscribe(['ipv4_neighbors'])
     assert(result is True)
+
 
 def test_subscribe_ipv6_neighbors_states(gnmi_server, snappiserver, session):
     change_mockserver_status(200, False)

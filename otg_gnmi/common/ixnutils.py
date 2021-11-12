@@ -473,7 +473,6 @@ class TestManager:
                 }
             )
 
-
     def collect_port_stats(self):
         api_start = datetime.datetime.now()
         try:
@@ -650,7 +649,6 @@ class TestManager:
                     'nanoseconds':  get_time_elapsed(api_start)
                 }
             )
-
 
     def create_update_response(self, encoding, stats_name, stats):
         api_start = datetime.datetime.now()
@@ -857,7 +855,13 @@ class TestManager:
                 publish(key, self.flow_subscriptions, session, results, 'Flow')
 
             for key in self.neighbor_subscriptions:
-                publish(key, self.neighbor_subscriptions, session, results, 'Neighbor')
+                publish(
+                    key,
+                    self.neighbor_subscriptions,
+                    session,
+                    results,
+                    'Neighbor'
+                )
 
             for key in self.protocol_subscriptions:
                 publish(key, self.protocol_subscriptions,

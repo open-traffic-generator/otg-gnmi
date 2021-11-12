@@ -176,7 +176,7 @@ def get_states():
         states_request = api.states_request()
         states_request.deserialize(request.data.decode('utf-8'))
         flask_logger.info('get_status Request : [%s]', states_request)
-        
+
         states_response = api.states_response()
         if states_request.choice == 'ipv4_neighbors':
             states_response.choice = 'ipv4_neighbors'
@@ -215,8 +215,6 @@ def get_states():
                         response=json.dumps(
                             {'errors': ['get_states is not implemented']}),
                         headers={'Content-Type': 'application/json'})
-
-
 
 
 @app.after_request
