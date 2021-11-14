@@ -119,6 +119,7 @@ def gnmi_path_to_string(subscription):
     # print_type(subscription)
     path = ''
     name = ''
+    sub_key = 'name'
     for ele in subscription.path.elem:
         path = path + '/' + ele.name
         if ele.key is None or len(ele.key) == 0:
@@ -126,7 +127,9 @@ def gnmi_path_to_string(subscription):
         for key in ele.key:
             path = path + '[' + key + ':' + ele.key[key] + ']'
             name = ele.key[key]
-    return path, name
+            sub_key = key
+            break   # TBD: enhance framwork to support multiple key(s)
+    return path, name, sub_key
 
 
 def get_subscription_type(path):
