@@ -106,9 +106,9 @@ echo_version() {
 }
 
 build() {
-    docker rmi -f "otg-gnmi-server"> /dev/null 2>&1 || true
+    docker rmi -f "ixia-c-gnmi-server"> /dev/null 2>&1 || true
     echo "Building production docker image..."
-    docker build -t otg-gnmi-server .
+    docker build -t ixia-c-gnmi-server .
     version=$(head ./version | cut -d' ' -f1)
     echo "gNMI - Server version : ${version}"
 }
