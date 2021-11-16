@@ -15,7 +15,9 @@ from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
                     get_time_elapsed, gnmi_path_to_string, init_logging)
 
-POLL_INTERVAL = 2
+ATHENA_POLL_INTERVAL = 0.05
+IXN_POLL_INTERVAL = 4
+POLL_INTERVAL = IXN_POLL_INTERVAL
 
 g_RequestId = -1
 
@@ -339,8 +341,7 @@ class TestManager:
                 for request in request_iterator:
                     requests.append(request)
             else:
-                async for request in request_iterator.__aiter__():
-                    requests.append(request)
+                requests.append(await request_iterator.__anext__())
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)
@@ -525,9 +526,9 @@ class TestManager:
 
             if self.app_mode == 'ixnetwork':
                 self.api = snappi.api(location=target, ext='ixnetwork')
-                global POLL_INTERVAL
-                POLL_INTERVAL = POLL_INTERVAL * 2
             else:
+                global POLL_INTERVAL
+                POLL_INTERVAL = ATHENA_POLL_INTERVAL
                 self.api = snappi.api(location=target)
             self.logger.info('Initialized snappi...')
             return self.api
