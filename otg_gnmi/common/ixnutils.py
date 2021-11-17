@@ -38,7 +38,9 @@ class SubscriptionReq:
         self.uniqueId = get_request_id()
         self.mode = subscription.mode
         self.gnmipath = subscription.path
-        self.stringpath, self.name = gnmi_path_to_string(subscription)
+        self.stringpath, self.name, self.key = gnmi_path_to_string(
+            subscription
+        )
         self.type = get_subscription_type(self.stringpath)
         self.callback, self.deserializer = TestManager.Instance().get_callback(
             self.stringpath
@@ -297,14 +299,10 @@ class TestManager:
                 session = self.client_sessions[context]
             else:
                 requests = []
-                try:
-                    await asyncio.wait_for(
+                await asyncio.wait_for(
                         self.parse_requests(request_iterator, requests),
                         timeout=1.0
                     )
-                except asyncio.TimeoutError as ex:
-                    self.logger.error(
-                        'Parse request timed out exception: %s', str(ex))
 
                 session = ClientSession(context, requests)
                 self.client_sessions[context] = session
@@ -407,22 +405,14 @@ class TestManager:
                 metrics = sub.callback(names)
                 # self.logger.info('Collected %s stats for %s', meta, metrics)
                 for metric in metrics:
-                    if hasattr(metric, 'name'):
-                        if metric.name not in name_to_sub_reverse_map:
-                            continue
-                        sub = name_to_sub_reverse_map[metric.name]
-                        sub.prev_stats = sub.curr_stats
-                        sub.curr_stats = metric
-                        sub.compute_delta()
-                        sub.encode_stats(metric.name)
-                    elif hasattr(metric, 'ethernet_name'):
-                        if metric.ethernet_name not in name_to_sub_reverse_map:
-                            continue
-                        sub = name_to_sub_reverse_map[metric.ethernet_name]
-                        sub.prev_stats = sub.curr_stats
-                        sub.curr_stats = metric
-                        sub.compute_delta()
-                        sub.encode_stats(metric.ethernet_name)
+                    key = getattr(metric, sub.key)
+                    if key not in name_to_sub_reverse_map:
+                        continue
+                    sub = name_to_sub_reverse_map[key]
+                    sub.prev_stats = sub.curr_stats
+                    sub.curr_stats = metric
+                    sub.compute_delta()
+                    sub.encode_stats(key)
 
             except Exception as ex:
                 for key in subscriptions:
@@ -713,15 +703,24 @@ class TestManager:
             for path in self.port_subscriptions:
                 sub = self.port_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Flow Subscriptions: total subscription = %s', len(
-                    self.flow_subscriptions))
+                    self.flow_subscriptions)
+                )
             for path in self.flow_subscriptions:
                 sub = self.flow_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Neighbor Subscriptions: total subscription = %s', len(
@@ -729,7 +728,11 @@ class TestManager:
             for path in self.neighbor_subscriptions:
                 sub = self.neighbor_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Protocol Subscriptions: total subscription = %s',
@@ -738,7 +741,11 @@ class TestManager:
             for path in self.protocol_subscriptions:
                 sub = self.protocol_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, Name: %s', path, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
         finally:
             self.profile_logger.info(
                 "dump_all_subscription completed!", extra={
