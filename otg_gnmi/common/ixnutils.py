@@ -15,7 +15,9 @@ from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
                     get_time_elapsed, gnmi_path_to_string, init_logging)
 
-POLL_INTERVAL = 2
+ATHENA_POLL_INTERVAL = 0.05
+IXN_POLL_INTERVAL = 4
+POLL_INTERVAL = IXN_POLL_INTERVAL
 
 g_RequestId = -1
 
@@ -36,7 +38,9 @@ class SubscriptionReq:
         self.uniqueId = get_request_id()
         self.mode = subscription.mode
         self.gnmipath = subscription.path
-        self.stringpath, self.name, self.key = gnmi_path_to_string(subscription)
+        self.stringpath, self.name, self.key = gnmi_path_to_string(
+            subscription
+        )
         self.type = get_subscription_type(self.stringpath)
         self.callback, self.deserializer = TestManager.Instance().get_callback(
             self.stringpath
@@ -295,14 +299,10 @@ class TestManager:
                 session = self.client_sessions[context]
             else:
                 requests = []
-                try:
-                    await asyncio.wait_for(
+                await asyncio.wait_for(
                         self.parse_requests(request_iterator, requests),
                         timeout=1.0
                     )
-                except asyncio.TimeoutError as ex:
-                    self.logger.error(
-                        'Parse request timed out exception: %s', str(ex))
 
                 session = ClientSession(context, requests)
                 self.client_sessions[context] = session
@@ -339,8 +339,7 @@ class TestManager:
                 for request in request_iterator:
                     requests.append(request)
             else:
-                async for request in request_iterator.__aiter__():
-                    requests.append(request)
+                requests.append(await request_iterator.__anext__())
         except Exception as ex:
             self.logger.error('Exception: %s', str(ex))
             self.logger.error('Exception: ', exc_info=True)
@@ -517,9 +516,9 @@ class TestManager:
 
             if self.app_mode == 'ixnetwork':
                 self.api = snappi.api(location=target, ext='ixnetwork')
-                global POLL_INTERVAL
-                POLL_INTERVAL = POLL_INTERVAL * 2
             else:
+                global POLL_INTERVAL
+                POLL_INTERVAL = ATHENA_POLL_INTERVAL
                 self.api = snappi.api(location=target)
             self.logger.info('Initialized snappi...')
             return self.api
@@ -704,15 +703,24 @@ class TestManager:
             for path in self.port_subscriptions:
                 sub = self.port_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]', path,  sub.key, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Flow Subscriptions: total subscription = %s', len(
-                    self.flow_subscriptions))
+                    self.flow_subscriptions)
+                )
             for path in self.flow_subscriptions:
                 sub = self.flow_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]', path,  sub.key, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Neighbor Subscriptions: total subscription = %s', len(
@@ -720,7 +728,11 @@ class TestManager:
             for path in self.neighbor_subscriptions:
                 sub = self.neighbor_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]', path,  sub.key, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
 
             self.logger.info(
                 'Protocol Subscriptions: total subscription = %s',
@@ -729,7 +741,11 @@ class TestManager:
             for path in self.protocol_subscriptions:
                 sub = self.protocol_subscriptions[path]
                 self.logger.info(
-                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]', path,  sub.key, sub.name)
+                    '\t\tSubscriptions: %s, [Key: %s, Name: %s]',
+                    path,
+                    sub.key,
+                    sub.name
+                )
         finally:
             self.profile_logger.info(
                 "dump_all_subscription completed!", extra={
