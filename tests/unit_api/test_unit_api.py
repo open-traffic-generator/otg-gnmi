@@ -48,20 +48,20 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
     expected_stats = [
         {
             'name': 'P1',
-            'frames_tx': 10000,
-            'frames_rx': 10000
+            'frames_tx': "10000",
+            'frames_rx': "10000"
         },
         {
             'name': 'P2',
-            'frames_tx': 10000,
-            'frames_rx': 10000
+            'frames_tx': "10000",
+            'frames_rx': "10000"
         },
         {
             'name': 'F1',
             'port_tx': "P1",
             'port_rx': "P2",
-            'frames_tx': 10000,
-            'frames_rx': 10000
+            'frames_tx': "10000",
+            'frames_rx': "10000"
         },
         {
             'name': 'BGPv4-1',
