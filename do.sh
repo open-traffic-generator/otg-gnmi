@@ -2,7 +2,6 @@
 
 OTG_API_VERSION=0.6.13
 OPENCONFIG_GNMI_COMMIT=741cdaba27df2decde561afef843f16d0631373f
-UT_REPORT=ut-report.html
 
 # Avoid warnings for non-interactive apt-get install
 export DEBIAN_FRONTEND=noninteractive
@@ -70,9 +69,19 @@ run() {
     python -m otg_gnmi ${@}
 }
 
+run_test() {
+    echo "Running all tests ..."
+    run_clinet_test \
+    && run_unit_test
+
+}
+
 run_unit_test() {
-    echo "Running all unit tests ..."
-    coverage run --source=./otg_gnmi -m pytest --html=${UT_REPORT} --self-contained-html ./tests/ 
+    echo "Running all api unit tests ..."
+    REPORT="gnmi-api-ut.html"
+    coverage run --source=./otg_gnmi -m pytest --html=${REPORT} --self-contained-html ./tests/unit_api
+    analyze_result ${REPORT}
+    rm -rf ./${REPORT} 2>&1 || true
     coverage report -m
     rm -rf ./otg_gnmi/__pycache__
     rm -rf ./tests/__pycache__
@@ -83,13 +92,27 @@ run_unit_test() {
     rm .coverage
 }
 
-analyze_ut_result() {
-    echo "Analyzing UT results..."
-    ut_report=${UT_REPORT}
-    total=$(cat ${ut_report} | grep -o -P '(?<=(<p>)).*(?=( tests))')
-    echo "Number of Total Unit Tests: ${total}"
-    passed=$(cat ${ut_report} | grep -o -P '(?<=(<span class="passed">)).*(?=( passed</span>))')
-    echo "Number of Passed Unit Tests: ${passed}"
+run_clinet_test() {
+    echo "Running all gnmi client tests ..."
+    REPORT="gnmi-client-ut.html"
+    python -m pytest --html=${REPORT} --self-contained-html ./tests/unit_gnmi_clinet
+    analyze_result ${REPORT}
+    rm -rf ./${REPORT} 2>&1 || true
+    rm -rf ./otg_gnmi/__pycache__
+    rm -rf ./tests/__pycache__
+    rm -rf ./tests/.pytest_cache
+    rm -rf ./tests/mockstatus.txt 2>&1 || true
+    rm -rf ./tests/unit_api/__pycache__ 2>&1 || true
+    rm -rf ./tests/unit_gnmi_clinet/__pycache__ 2>&1 || true
+}
+
+analyze_result() {
+    report=${1}
+    echo "Analyzing results: ${report}"
+    total=$(cat ${report} | grep -o -P '(?<=(<p>)).*(?=( tests))')
+    echo "Number of Total Tests: ${total}"
+    passed=$(cat ${report} | grep -o -P '(?<=(<span class="passed">)).*(?=( passed</span>))')
+    echo "Number of Passed Tests: ${passed}"
     if [ ${passed} = ${total} ]
     then 
         echo "All tests are passed..."
@@ -97,7 +120,6 @@ analyze_ut_result() {
         echo "All tests are not passed, Please check locally!"
         exit 1
     fi
-    rm -rf ./${ut_report} 2>&1 || true
 }
 
 echo_version() {
@@ -133,10 +155,10 @@ case $1 in
 		run ${@}
 		;;
 	art	    )
-		install_ext_deps && get_proto && gen_py_stubs && run_unit_test && analyze_ut_result
+		install_ext_deps && get_proto && gen_py_stubs && run_test
 		;;
     unit    )
-        run_unit_test
+        run_test
         ;;
     build    )
         build

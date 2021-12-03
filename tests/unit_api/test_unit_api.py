@@ -4,8 +4,7 @@ import json
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_capabilities_api(snappiserver,
-                                            gnmi_server):
+async def test_gnmi_server_capabilities_api(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(200)
 
     expected_res = {
@@ -29,8 +28,7 @@ async def test_gnmi_server_capabilities_api(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_subscribe_api_200(snappiserver,
-                                             gnmi_server):
+async def test_gnmi_server_subscribe_api_200(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(200)
     responses = await subscribe(gnmi_api)
 
@@ -114,8 +112,7 @@ async def test_gnmi_server_subscribe_api_200(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_subscribe_api_400(snappiserver,
-                                             gnmi_server):
+async def test_gnmi_server_subscribe_api_400(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(400)
     responses = await subscribe(gnmi_api)
 
@@ -138,8 +135,7 @@ async def test_gnmi_server_subscribe_api_400(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_subscribe_api_500(snappiserver,
-                                             gnmi_server):
+async def test_gnmi_server_subscribe_api_500(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(500)
     responses = await subscribe(gnmi_api)
 
@@ -162,8 +158,7 @@ async def test_gnmi_server_subscribe_api_500(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_subscribe_api_501(snappiserver,
-                                             gnmi_server):
+async def test_gnmi_server_subscribe_api_501(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(501)
     responses = await subscribe(gnmi_api)
 
@@ -186,8 +181,7 @@ async def test_gnmi_server_subscribe_api_501(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_set_api(snappiserver,
-                                   gnmi_server):
+async def test_gnmi_server_set_api(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(200)
 
     found_err = False
@@ -202,8 +196,7 @@ async def test_gnmi_server_set_api(snappiserver,
 
 
 @pytest.mark.asyncio
-async def test_gnmi_server_get_api(snappiserver,
-                                   gnmi_server):
+async def test_gnmi_server_get_api(snappiserver):
     gnmi_api = init_gnmi_with_mock_server(200)
 
     found_err = False
