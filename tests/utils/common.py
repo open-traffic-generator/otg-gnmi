@@ -46,6 +46,7 @@ def exec_shell(cmd, sudo=True, check_return_code=True):
 
 
 def get_pid_of_gnmi_processes():
+    print("Getting existing gNMI server process ids...")
     process_ids = []
     out_lines = exec_shell("ps -ef")
     if out_lines is None:
@@ -64,6 +65,7 @@ def get_pid_of_gnmi_processes():
 
 
 def kill_gnmi_processes():
+    print("Killing existing gNMI server processes...")
     processes_to_be_killed = get_pid_of_gnmi_processes()
 
     for process in processes_to_be_killed:
@@ -260,12 +262,14 @@ async def subscribe(api):
 
 
 def create_new_session(wait_for_responses=3):
+    print("Spawning new gNMI client...")
     session = Session()
     session.options.waitForResponses = wait_for_responses
     return session
 
 
 def crate_new_gnmi_server():
+    print("Spawning new gNMI server...")
     kill_gnmi_processes()
     gnmi_server = subprocess.Popen(
         [
@@ -289,6 +293,7 @@ def crate_new_gnmi_server():
 
 
 def kill_gnmi_server(gnmi_server):
+    print("Terminating gNMI server...")
     gnmi_server.terminate()
     kill_gnmi_processes()
     # Give the server time to be closed
