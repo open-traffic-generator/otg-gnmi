@@ -1,18 +1,80 @@
 import argparse
 import json
 import os
+import subprocess
+import time
 
 import grpc
 import mock
 from google.protobuf import json_format
 from otg_gnmi.autogen import gnmi_pb2
 from otg_gnmi.gnmi_serv_asyncio import AsyncGnmiService
+from tests.session import Session
 from tests.utils.client_utils import generate_subscription_request
 from tests.utils.settings import GnmiSettings
 
 SETTINGS_FILE = 'settings.json'
 TESTS_FOLDER = 'tests'
 OPTIONS = GnmiSettings()
+SUDO_USER = "root"
+
+
+def exec_shell(cmd, sudo=True, check_return_code=True):
+    """
+    Executes a command in native shell and returns output as str on success or,
+    None on error.
+    """
+    if not sudo:
+        cmd = 'sudo -u ' + SUDO_USER + ' ' + cmd
+
+    print('Executing `%s` ...' % cmd)
+    p = subprocess.Popen(
+        cmd.encode('utf-8', errors='ignore'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    )
+    out, _ = p.communicate()
+    out = out.decode('utf-8', errors='ignore')
+
+    print('Output:\n%s' % out)
+
+    if check_return_code:
+        if p.returncode == 0:
+            return out
+        return None
+    else:
+        return out
+
+
+def get_pid_of_gnmi_processes():
+    process_ids = []
+    out_lines = exec_shell("ps -ef")
+    if out_lines is None:
+        raise Exception("Failed to get process details!!!")
+
+    out_lines = out_lines.split("\n")
+
+    for line in out_lines:
+        if "python -m otg_gnmi" in line:
+            print("GNMI process : {}".format(line))
+            process_ids.append(line.split()[1])
+
+    print("Process IDs for gnmi processes : {}".format(process_ids))
+
+    return process_ids
+
+
+def kill_gnmi_processes():
+    processes_to_be_killed = get_pid_of_gnmi_processes()
+
+    for process in processes_to_be_killed:
+        out = exec_shell("kill -9 {}".format(
+            process
+        ))
+
+        if out is None:
+            raise Exception("Failed to kill process!!!")
+
+        print("Process {} killed...".format(process))
 
 
 def convert_proto_to_json(proto_obj):
@@ -195,3 +257,39 @@ async def subscribe(api):
         if count == 3:
             break
     return response_list
+
+
+def create_new_session(wait_for_responses=3):
+    session = Session()
+    session.options.waitForResponses = wait_for_responses
+    return session
+
+
+def crate_new_gnmi_server():
+    kill_gnmi_processes()
+    gnmi_server = subprocess.Popen(
+        [
+            "python",
+            "-m",
+            "otg_gnmi",
+            "--server-port",
+            "50135",
+            "--app-mode",
+            "athena",
+            "--unittest",
+            "--insecure",
+            "--no-stdout"
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    # Give the server time to start
+    time.sleep(2)
+    return gnmi_server
+
+
+def kill_gnmi_server(gnmi_server):
+    gnmi_server.terminate()
+    kill_gnmi_processes()
+    # Give the server time to be closed
+    time.sleep(1)
