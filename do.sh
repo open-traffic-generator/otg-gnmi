@@ -170,4 +170,3 @@ case $1 in
         $1 || echo "usage: $0 [deps|ext|clean|run|art|unit|build|version]"
 		;;
 esac
-
