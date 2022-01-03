@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from enum import Enum
+from logging.handlers import RotatingFileHandler
 
 from ..autogen import gnmi_pb2
 
@@ -63,7 +64,14 @@ def init_logging(
         log_format = '{"level":"%(levelname)s","ctx":"' + ctx + '","scope":"' + scope + '","api":"%(funcName)s","ts":"%(asctime)s.%(msecs)03dZ","msg":"%(message)s"}' # noqa
 
     formatter = CustomFormatter(log_format, "%Y-%m-%dT%H:%M:%S")
-    fileHandler = logging.FileHandler(logfile, mode='a')
+    fileHandler = RotatingFileHandler(
+        logfile,
+        mode='a',
+        maxBytes=25*1024*1024,
+        backupCount=10,
+        encoding=None,
+        delay=0
+    )
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
