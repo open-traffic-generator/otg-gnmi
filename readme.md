@@ -1,8 +1,9 @@
 # OTG gNMI
 
-![Build](https://github.com/open-traffic-generator/otg-gnmi/actions/workflows/publish.yml/badge.svg)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
+[![release)](https://img.shields.io/github/v/release/open-traffic-generator/otg-gnmi)](https://github.com/open-traffic-generator/otg-gnmi/releases/latest)
+[![Build](https://github.com/open-traffic-generator/otg-gnmi/actions/workflows/publish.yml/badge.svg)](https://github.com/open-traffic-generator/otg-gnmi/actions/workflows/publish.yml)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/open-traffic-generator/otg-gnmi.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/open-traffic-generator/otg-gnmi/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/open-traffic-generator/otg-gnmi.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/open-traffic-generator/otg-gnmi/context:python)
 
