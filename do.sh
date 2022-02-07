@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OTG_API_VERSION=0.7.2
+OTG_API_VERSION=0.7.3
 OPENCONFIG_GNMI_COMMIT=741cdaba27df2decde561afef843f16d0631373f
 
 # Avoid warnings for non-interactive apt-get install
@@ -26,15 +26,10 @@ get_proto() {
     echo "Fetching proto files"
     rm -rf otg_gnmi/proto/> /dev/null 2>&1 || true \
     && mkdir otg_gnmi/proto/ \
-    && get_otg_proto \
     && get_gnmi_proto
 
 }
 
-get_otg_proto() {
-    echo "Fetching OTG proto for ${OTG_API_VERSION} ..."
-    curl -kL https://github.com/open-traffic-generator/models/releases/download/v${OTG_API_VERSION}/otg.proto> ./otg_gnmi/proto/otg.proto
-}
 
 get_gnmi_proto() {
     echo "Fetching gNMI proto for ${OPENCONFIG_GNMI_COMMIT} ..."
@@ -47,15 +42,7 @@ get_gnmi_proto() {
 
 gen_py_stubs() {
     echo "Generating python stubs ..."
-    rm -rf otg_gnmi/autogen/otg_*.py> /dev/null 2>&1 || true \
-    && rm -rf otg_gnmi/autogen/gnmi_*.py> /dev/null 2>&1 || true
-    curl -kLO https://github.com/open-traffic-generator/models/releases/download/v${OTG_API_VERSION}/protobuf3.tar.gz \
-    && tar -xvf protobuf3.tar.gz \
-    && sed -i 's/from protobuf3 import otg_pb2 as protobuf3_dot_otg__pb2/import otg_pb2 as otg__pb2/g' protobuf3/otg_pb2_grpc.py \
-    && sed -i 's/protobuf3_dot_//g' protobuf3/otg_pb2_grpc.py \
-    && cp ./protobuf3/otg_pb2_grpc.py ./otg_gnmi/autogen/otg_pb2_grpc.py \
-    && cp ./protobuf3/otg_pb2.py ./otg_gnmi/autogen/otg_pb2.py \
-    && rm -rf protobuf3.tar.gz protobuf3
+    rm -rf otg_gnmi/autogen/gnmi_*.py> /dev/null 2>&1 || true
 
     python -m grpc_tools.protoc --experimental_allow_proto3_optional -I./otg_gnmi/proto --python_out=./otg_gnmi/autogen --grpc_python_out=./otg_gnmi/autogen ./otg_gnmi/proto/gnmi.proto \
     && sed -i 's/import gnmi_pb2 as gnmi__pb2/from . import gnmi_pb2 as gnmi__pb2/g' ./otg_gnmi/autogen/gnmi_pb2_grpc.py \

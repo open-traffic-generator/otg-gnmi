@@ -10,7 +10,9 @@ import logging
 import snappi
 from google.protobuf.any_pb2 import Any
 
-from ..autogen import gnmi_pb2, otg_pb2
+from ..autogen import gnmi_pb2
+
+from snappi import otg_pb2
 from .client_session import ClientSession
 from .utils import (RequestPathBase, RequestType, get_subscription_type,
                     get_time_elapsed, gnmi_path_to_string, init_logging)
