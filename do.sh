@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OTG_API_VERSION=0.7.3
+OTG_API_VERSION=0.7.8
 OPENCONFIG_GNMI_COMMIT=741cdaba27df2decde561afef843f16d0631373f
 
 # Avoid warnings for non-interactive apt-get install
